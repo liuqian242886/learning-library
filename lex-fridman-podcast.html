@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lex Fridman Podcast — 最新两期深度解读</title>
+<link href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f1a;--bg2:#13162a;--bg3:#1a1f36;--card:#1e2340;
+  --border:rgba(255,255,255,0.07);
+  --p:#7c6af7;--b:#5dbef4;--g:#5cf0b0;--o:#f0a060;--r:#f06090;--y:#f0d060;
+  --yt:#ff4444;
+  --text:#e8eaf6;--text2:#9ea3c4;--text3:#6b70a0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-thumb{background:rgba(255,68,68,.4);border-radius:3px;}
+
+/* PROGRESS BAR */
+#progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--yt),#ff9944);width:0%;z-index:1000;transition:width .1s;}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;left:0;top:0;width:220px;height:100vh;
+  background:var(--bg2);border-right:1px solid var(--border);
+  padding:24px 0;overflow-y:auto;z-index:100;
+}
+.sidebar-logo{padding:0 20px 20px;border-bottom:1px solid var(--border);}
+.sidebar-logo .platform{font-size:10px;letter-spacing:2px;color:var(--yt);text-transform:uppercase;font-weight:700;}
+.sidebar-logo .name{font-size:13px;font-weight:800;margin-top:4px;color:var(--text);}
+.sidebar nav{padding:12px 0;}
+.sidebar nav a{
+  display:block;padding:8px 20px;font-size:12px;color:var(--text3);
+  text-decoration:none;transition:all .2s;border-left:2px solid transparent;
+}
+.sidebar nav a:hover,.sidebar nav a.active{color:var(--text);border-left-color:var(--yt);background:rgba(255,68,68,.06);}
+.sidebar-ep{padding:8px 20px 4px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--yt);margin-top:8px;font-weight:700;}
+
+/* MAIN */
+.main{margin-left:220px;padding:0 0 80px;}
+
+/* HERO */
+.hero{
+  background:linear-gradient(135deg,#13162a 0%,#1a0e2a 50%,#0d1a2a 100%);
+  padding:56px 56px 48px;position:relative;overflow:hidden;
+  border-bottom:1px solid var(--border);
+}
+.hero::before{content:'';position:absolute;top:-80px;right:-60px;width:400px;height:400px;
+  border-radius:50%;background:radial-gradient(circle,rgba(255,68,68,.1) 0%,transparent 70%);}
+.hero-inner{position:relative;z-index:1;max-width:800px;}
+.platform-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 12px;border-radius:20px;font-size:10.5px;font-weight:700;
+  background:rgba(255,68,68,.15);color:var(--yt);border:1px solid rgba(255,68,68,.3);
+  letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px;
+}
+.hero h1{font-size:36px;font-weight:900;line-height:1.2;margin-bottom:10px;
+  background:linear-gradient(135deg,#fff 40%,#ff6666 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:15px;color:var(--text2);line-height:1.7;max-width:600px;margin-bottom:24px;}
+.host-line{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text3);}
+.host-line strong{color:var(--text2);}
+
+/* EPISODE CARDS (hero) */
+.ep-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px;}
+.ep-card{
+  background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:14px;
+  padding:20px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+}
+.ep-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;opacity:0;transition:.2s;}
+.ep-card.ep-493::before{background:linear-gradient(90deg,var(--yt),#ff9944);}
+.ep-card.ep-492::before{background:linear-gradient(90deg,var(--p),var(--b));}
+.ep-card:hover{border-color:rgba(255,68,68,.3);transform:translateY(-2px);}
+.ep-card:hover::before,.ep-card.selected::before{opacity:1;}
+.ep-card.selected{border-color:rgba(255,68,68,.4);background:rgba(255,68,68,.05);}
+.ep-num{font-size:10px;letter-spacing:2px;color:var(--yt);text-transform:uppercase;font-weight:700;margin-bottom:6px;}
+.ep-card.ep-492 .ep-num{color:var(--p);}
+.ep-title{font-size:14px;font-weight:700;margin-bottom:8px;line-height:1.4;}
+.ep-guest{font-size:12px;color:var(--text3);margin-bottom:10px;}
+.ep-meta{display:flex;gap:10px;flex-wrap:wrap;}
+.ep-tag{padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:600;}
+.ep-493 .ep-tag{background:rgba(255,68,68,.12);color:var(--yt);border:1px solid rgba(255,68,68,.2);}
+.ep-492 .ep-tag{background:rgba(124,106,247,.12);color:var(--p);border:1px solid rgba(124,106,247,.2);}
+
+/* SECTION */
+.section{max-width:860px;margin:0 auto;padding:48px 56px 0;}
+.sec-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--yt);font-weight:700;margin-bottom:6px;}
+.sec-title{font-size:24px;font-weight:800;margin-bottom:24px;}
+
+/* TABS */
+.ep-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin:0;padding:0 56px;}
+.ep-tab{
+  padding:16px 28px;font-size:13px;font-weight:700;cursor:pointer;
+  color:var(--text3);border-bottom:2px solid transparent;transition:all .2s;
+  font-family:inherit;background:none;border-top:none;border-left:none;border-right:none;
+}
+.ep-tab:hover{color:var(--text2);}
+.ep-tab.active{color:var(--text);border-bottom-color:var(--yt);}
+.ep-tab.active.tab-492{border-bottom-color:var(--p);}
+.ep-panel{display:none;padding:0 56px;}
+.ep-panel.active{display:block;}
+
+/* OVERVIEW BOX */
+.overview-box{
+  background:var(--bg3);border:1px solid var(--border);border-radius:16px;
+  padding:28px 32px;margin-bottom:32px;margin-top:28px;
+}
+.overview-box h3{font-size:15px;font-weight:800;margin-bottom:12px;}
+.overview-box p{font-size:14px;color:var(--text2);line-height:1.8;}
+
+/* CHAPTERS */
+.chapters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:40px;}
+.chapter-item{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:12px 14px;display:flex;align-items:flex-start;gap:10px;
+}
+.chapter-ts{font-size:10px;color:var(--yt);font-weight:700;white-space:nowrap;padding-top:2px;}
+.chapter-name{font-size:12px;color:var(--text2);line-height:1.4;}
+
+/* THEME BLOCKS */
+.theme-block{margin-bottom:36px;}
+.theme-header{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+  padding-bottom:12px;border-bottom:1px solid var(--border);
+}
+.theme-icon{font-size:20px;}
+.theme-title{font-size:17px;font-weight:800;}
+.theme-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+.theme-body{font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:14px;}
+
+/* QUOTE BLOCK */
+.quote-block{
+  border-left:3px solid var(--yt);
+  background:rgba(255,68,68,.05);
+  border-radius:0 10px 10px 0;
+  padding:16px 20px;margin:16px 0;
+}
+.quote-block.q-p{border-left-color:var(--p);background:rgba(124,106,247,.05);}
+.quote-block.q-g{border-left-color:var(--g);background:rgba(92,240,176,.05);}
+.quote-block.q-b{border-left-color:var(--b);background:rgba(93,190,244,.05);}
+.quote-block.q-o{border-left-color:var(--o);background:rgba(240,160,96,.05);}
+.quote-speaker{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:var(--text3);margin-bottom:6px;}
+.quote-text{font-size:13.5px;font-style:italic;color:var(--text);line-height:1.75;}
+.quote-explain{font-size:13px;color:var(--text2);line-height:1.7;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+
+/* MIND MAP */
+.mindmap-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:36px;overflow-x:auto;}
+.mindmap-title{font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:16px;font-weight:700;}
+
+/* KEY TAKEAWAYS */
+.takeaways{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-top:28px;margin-bottom:40px;}
+.takeaway-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:20px;display:flex;flex-direction:column;gap:8px;
+}
+.takeaway-card.accent-r{border-color:rgba(255,68,68,.25);background:rgba(255,68,68,.05);}
+.takeaway-card.accent-p{border-color:rgba(124,106,247,.25);background:rgba(124,106,247,.05);}
+.takeaway-card.accent-g{border-color:rgba(92,240,176,.25);background:rgba(92,240,176,.05);}
+.takeaway-card.accent-b{border-color:rgba(93,190,244,.25);background:rgba(93,190,244,.05);}
+.takeaway-card.accent-o{border-color:rgba(240,160,96,.25);background:rgba(240,160,96,.05);}
+.takeaway-icon{font-size:22px;}
+.takeaway-title{font-size:13.5px;font-weight:800;}
+.takeaway-text{font-size:12.5px;color:var(--text2);line-height:1.65;}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:40px 0;}
+
+/* NARRATIVE INTRO */
+.narrative{
+  max-width:860px;margin:0 auto;padding:48px 56px 0;
+}
+.narrative-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--yt);font-weight:700;margin-bottom:10px;}
+.narrative-title{
+  font-size:30px;font-weight:900;line-height:1.25;margin-bottom:20px;
+  background:linear-gradient(135deg,#fff 40%,#ff7766 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.narrative-body{font-size:15px;color:var(--text2);line-height:2;margin-bottom:14px;}
+.narrative-body strong{color:var(--text);font-weight:700;}
+.narrative-body em{color:var(--yt);font-style:normal;font-weight:600;}
+.narrative-pull{
+  font-size:22px;font-weight:800;color:var(--text);line-height:1.5;
+  border-left:4px solid var(--yt);padding:14px 24px;margin:28px 0;
+  background:rgba(255,68,68,.04);border-radius:0 12px 12px 0;
+}
+.narrative-divider{display:flex;align-items:center;gap:16px;margin:32px 0 0;}
+.narrative-divider span{height:1px;flex:1;background:var(--border);}
+.narrative-divider em{font-size:11px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;font-style:normal;}
+
+/* INFOGRAPHIC */
+.infographic{max-width:860px;margin:0 auto;padding:48px 56px 0;}
+.infographic-title{font-size:20px;font-weight:800;margin-bottom:6px;}
+.infographic-sub{font-size:13px;color:var(--text3);margin-bottom:28px;}
+
+/* Venn Diagram */
+.venn-wrap{display:flex;align-items:center;gap:40px;margin-bottom:36px;flex-wrap:wrap;}
+.venn-svg-box{flex-shrink:0;}
+.venn-legend{flex:1;min-width:220px;}
+.venn-item{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;}
+.venn-dot{width:12px;height:12px;border-radius:50%;margin-top:4px;flex-shrink:0;}
+.venn-text h4{font-size:13.5px;font-weight:700;margin-bottom:3px;}
+.venn-text p{font-size:12.5px;color:var(--text2);line-height:1.6;}
+
+/* Design Principles Cards */
+.principles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:36px;}
+.principle-card{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:20px 18px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;
+}
+.principle-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;
+}
+.pc-1::after{background:var(--yt);}
+.pc-2::after{background:var(--g);}
+.pc-3::after{background:var(--p);}
+.pc-4::after{background:var(--b);}
+.principle-icon{font-size:26px;}
+.principle-title{font-size:13px;font-weight:800;line-height:1.3;}
+.principle-body{font-size:12px;color:var(--text2);line-height:1.65;}
+.principle-quote{font-size:11.5px;color:var(--text3);font-style:italic;padding-top:8px;border-top:1px solid var(--border);}
+
+/* Project Comparison */
+.compare-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:36px;}
+.compare-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;overflow:hidden;position:relative;}
+.compare-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.cc-wow::before{background:linear-gradient(90deg,#5cf0b0,#5dbef4);}
+.cc-ow::before{background:linear-gradient(90deg,var(--yt),#ff9944);}
+.compare-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.compare-icon{font-size:24px;}
+.compare-name{font-size:15px;font-weight:800;}
+.compare-year{font-size:11px;color:var(--text3);}
+.compare-row{display:flex;flex-direction:column;gap:10px;}
+.compare-item{padding:10px 14px;background:var(--bg3);border-radius:10px;}
+.compare-item-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);font-weight:700;margin-bottom:4px;}
+.compare-item-val{font-size:13px;color:var(--text2);line-height:1.5;}
+
+/* FOOTER */
+.footer{text-align:center;padding:40px;color:var(--text3);font-size:12px;border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+<div id="progress-bar"></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="platform">▶ YouTube</div>
+    <div class="name">Lex Fridman Podcast</div>
+  </div>
+  <nav>
+    <span class="sidebar-ep">EP #493 Jeff Kaplan</span>
+    <a href="#ep493-narrative">✍️ 英雄之旅</a>
+    <a href="#ep493-overview">📋 节目概览</a>
+    <a href="#ep493-infographic">📊 设计哲学图解</a>
+    <a href="#ep493-chapters">📑 章节结构</a>
+    <a href="#ep493-gaming">🎮 游戏人生</a>
+    <a href="#ep493-wow">🌍 魔兽世界</a>
+    <a href="#ep493-overwatch">⚔️ 守望先锋</a>
+    <a href="#ep493-leaving">🚪 离开暴雪</a>
+    <a href="#ep493-ai">🤖 AI与游戏</a>
+    <a href="#ep493-takeaways">💡 核心洞察</a>
+    <span class="sidebar-ep" style="color:var(--p)">EP #492 Rick Beato</span>
+    <a href="#ep492-overview">📋 节目概览</a>
+    <a href="#ep492-guitar">🎸 吉他大师</a>
+    <a href="#ep492-theory">🎵 音乐理论</a>
+    <a href="#ep492-ai">🤖 AI与音乐</a>
+    <a href="#ep492-youtube">📺 YouTube之路</a>
+    <a href="#ep492-takeaways">💡 核心洞察</a>
+  </nav>
+</aside>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="platform-badge">▶ YouTube · Lex Fridman Podcast</div>
+    <h1>最新两期播客深度解读</h1>
+    <div class="hero-sub">两位传奇人物的深度对话——一位缔造了《魔兽世界》和《守望先锋》的游戏设计师，一位以独特教学方式让数百万人重新爱上音乐的音乐教育家。无需看视频，读完即懂。</div>
+    <div class="host-line">👤 主持人：<strong>Lex Fridman</strong> — MIT 研究科学家，495万订阅者</div>
+    <div class="ep-cards">
+      <div class="ep-card ep-493 selected" onclick="switchEp('493',this)">
+        <div class="ep-num">EP #493 · 2026年3月12日 · 5小时10分</div>
+        <div class="ep-title">Jeff Kaplan：魔兽世界、守望先锋与游戏的未来</div>
+        <div class="ep-guest">👤 Jeff Kaplan — 暴雪传奇游戏设计师，《魔兽世界》《守望先锋》主设计师</div>
+        <div class="ep-meta">
+          <span class="ep-tag">游戏设计</span>
+          <span class="ep-tag">WoW</span>
+          <span class="ep-tag">AI未来</span>
+          <span class="ep-tag">56万观看</span>
+        </div>
+        <a href="https://youtube.com/watch?v=H9rF1CSSh-w" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:5px 12px;background:rgba(255,68,68,0.15);color:#ff4444;border:1px solid rgba(255,68,68,0.3);border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">▶ 观看原视频</a>
+      </div>
+      <div class="ep-card ep-492" onclick="switchEp('492',this)">
+        <div class="ep-num" style="color:var(--p)">EP #492 · 2026年3月1日 · 2小时34分</div>
+        <div class="ep-title">Rick Beato：史上最伟大吉他手、音乐史与未来</div>
+        <div class="ep-guest">👤 Rick Beato — 音乐教育家、制作人，YouTube 百万音乐频道主理人</div>
+        <div class="ep-meta">
+          <span class="ep-tag" style="background:rgba(124,106,247,.12);color:var(--p);border-color:rgba(124,106,247,.2)">音乐理论</span>
+          <span class="ep-tag" style="background:rgba(124,106,247,.12);color:var(--p);border-color:rgba(124,106,247,.2)">吉他</span>
+          <span class="ep-tag" style="background:rgba(124,106,247,.12);color:var(--p);border-color:rgba(124,106,247,.2)">AI音乐</span>
+          <span class="ep-tag" style="background:rgba(124,106,247,.12);color:var(--p);border-color:rgba(124,106,247,.2)">38万观看</span>
+        </div>
+        <a href="https://youtube.com/watch?v=1SJiTwbSI58" target="_blank" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:5px 12px;background:rgba(124,106,247,0.12);color:var(--p);border:1px solid rgba(124,106,247,0.3);border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">▶ 观看原视频</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EPISODE TABS -->
+<div class="ep-tabs">
+  <button class="ep-tab active" id="tab-493" onclick="switchTab('493')">🎮 #493 Jeff Kaplan — 游戏传奇</button>
+  <button class="ep-tab tab-492" id="tab-492" onclick="switchTab('492')">🎸 #492 Rick Beato — 音乐大师</button>
+</div>
+
+<!-- ========== EP 493 ========== -->
+<div class="ep-panel active" id="panel-493">
+
+  <!-- NARRATIVE INTRO -->
+  <div class="narrative" id="ep493-narrative">
+    <div class="narrative-label">The Hero's Journey</div>
+    <div class="narrative-title">从折翼的作家，到游戏的造神者</div>
+
+    <p class="narrative-body">
+      1980年代，一个少年在新泽西的街机厅第一次看到 Pac-Man 发光的屏幕，瞬间被迷住。他骑着自行车跑两个镇，只为多投一枚硬币。没人知道，这个孩子有一天会造出让数千万人在里面活了二十年的数字世界。
+    </p>
+
+    <p class="narrative-body">
+      他叫 <strong>Jeff Kaplan</strong>。在成为游戏设计师之前，他想成为一名作家——写了很多年，收到了 <em>170 封拒稿信</em>，仍不肯放弃。然后他沉迷进了一款叫 EverQuest 的网络游戏，在里面活了 272 天，还因此认识了未来的妻子。暴雪娱乐的创始人在游戏里发现了这个疯狂的玩家，把他挖走了。
+    </p>
+
+    <div class="narrative-pull">
+      "My whole career and my family are thanks to EverQuest."<br>
+      <span style="font-size:14px;font-weight:400;color:var(--text3)">— Jeff Kaplan，一款游戏改写了他的一切</span>
+    </div>
+
+    <p class="narrative-body">
+      此后的二十年，Jeff 在暴雪参与构建了《魔兽世界》——一个真实到玩家会在身上纹上"部落"或"联盟"纹身的数字王国。然后他主导了《守望先锋》的诞生——从一个被砍掉的失败项目的废墟里，用六周时间搭出了原型。两款游戏都成了时代符号。
+    </p>
+
+    <p class="narrative-body">
+      但在 2021 年，他突然消失了。没有声明，没有解释。外界猜测纷纷，直到这次长达五小时的对话，他才第一次说出了真正的原因：<strong>一位高管告诉他，守望先锋每年必须完成固定数额的营收指标。</strong> 那一刻，他知道，游戏结束了。
+    </p>
+
+    <p class="narrative-body">
+      这是一个关于<em>热爱与资本</em>、<em>创意与系统</em>、<em>出走与重生</em>的故事。现在的 Jeff 在悄悄做一款新游戏，叫《加利福尼亚传说》。他说，这一次，他只想做一件事——让玩游戏的人感到快乐。
+    </p>
+
+    <div class="narrative-divider"><span></span><em>以下是完整解读</em><span></span></div>
+  </div>
+
+  <div class="section" id="ep493-overview">
+    <div class="sec-label">EPISODE OVERVIEW</div>
+    <div class="sec-title">节目概览</div>
+    <div class="overview-box">
+      <h3>这期在聊什么？</h3>
+      <p>Jeff Kaplan 是暴雪娱乐历史上最具影响力的游戏设计师之一，职业生涯横跨《魔兽世界》《泰坦》（未发布）和《守望先锋》三个时代。2021年他突然从暴雪离职，三年多来几乎销声匿迹，直到现在才开口讲述一切——包括《泰坦》为什么失败、《守望先锋联赛》的崩溃、以及他为何在2021年彻底离开。</p>
+      <p style="margin-top:12px;">这不只是一个游戏人的故事，而是一个创意人在巨型商业机器里坚守热情、最终不得不出走的故事。对话跨越5个小时，从1980年代街机厅的少年时代，一直聊到他现在正在悄悄开发的新游戏《加利福尼亚传说》（The Legend of California）。</p>
+    </div>
+
+    <!-- MIND MAP -->
+    <div class="mindmap-wrap">
+      <div class="mindmap-title">话题思维导图</div>
+      <svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:320px;">
+        <defs>
+          <marker id="arr" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+            <polygon points="0 0, 6 2, 0 4" fill="rgba(255,68,68,0.5)"/>
+          </marker>
+        </defs>
+        <!-- Center -->
+        <ellipse cx="350" cy="160" rx="72" ry="32" fill="rgba(255,68,68,0.15)" stroke="rgba(255,68,68,0.5)" stroke-width="1.5"/>
+        <text x="350" y="155" text-anchor="middle" fill="#ff6666" font-size="12" font-weight="bold">Jeff Kaplan</text>
+        <text x="350" y="171" text-anchor="middle" fill="#9ea3c4" font-size="10">游戏设计传奇</text>
+        <!-- Left nodes -->
+        <line x1="278" y1="150" x2="190" y2="110" stroke="rgba(255,68,68,0.35)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="80" y="88" width="105" height="44" rx="10" fill="rgba(93,190,244,0.1)" stroke="rgba(93,190,244,0.3)" stroke-width="1"/>
+        <text x="133" y="107" text-anchor="middle" fill="#5dbef4" font-size="11" font-weight="bold">早期游戏人生</text>
+        <text x="133" y="122" text-anchor="middle" fill="#9ea3c4" font-size="10">街机/Zork/EverQuest</text>
+
+        <line x1="278" y1="165" x2="185" y2="165" stroke="rgba(255,68,68,0.35)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="75" y="145" width="105" height="44" rx="10" fill="rgba(92,240,176,0.1)" stroke="rgba(92,240,176,0.3)" stroke-width="1"/>
+        <text x="128" y="164" text-anchor="middle" fill="#5cf0b0" font-size="11" font-weight="bold">魔兽世界</text>
+        <text x="128" y="179" text-anchor="middle" fill="#9ea3c4" font-size="10">部落/联盟/世界构建</text>
+
+        <line x1="278" y1="178" x2="190" y2="218" stroke="rgba(255,68,68,0.35)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="80" y="198" width="105" height="44" rx="10" fill="rgba(240,160,96,0.1)" stroke="rgba(240,160,96,0.3)" stroke-width="1"/>
+        <text x="133" y="217" text-anchor="middle" fill="#f0a060" font-size="11" font-weight="bold">守望先锋</text>
+        <text x="133" y="232" text-anchor="middle" fill="#9ea3c4" font-size="10">6周诞生/联赛失败</text>
+
+        <!-- Right nodes -->
+        <line x1="422" y1="150" x2="510" y2="110" stroke="rgba(255,68,68,0.35)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="505" y="88" width="110" height="44" rx="10" fill="rgba(124,106,247,0.1)" stroke="rgba(124,106,247,0.3)" stroke-width="1"/>
+        <text x="560" y="107" text-anchor="middle" fill="#7c6af7" font-size="11" font-weight="bold">暴雪文化</text>
+        <text x="560" y="122" text-anchor="middle" fill="#9ea3c4" font-size="10">创造力/高压/崩塌</text>
+
+        <line x1="422" y1="165" x2="515" y2="165" stroke="rgba(255,68,68,0.35)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="510" y="145" width="110" height="44" rx="10" fill="rgba(240,96,144,0.1)" stroke="rgba(240,96,144,0.3)" stroke-width="1"/>
+        <text x="565" y="164" text-anchor="middle" fill="#f06090" font-size="11" font-weight="bold">离开与重生</text>
+        <text x="565" y="179" text-anchor="middle" fill="#9ea3c4" font-size="10">为何出走/新游戏</text>
+
+        <line x1="422" y1="178" x2="510" y2="218" stroke="rgba(255,68,68,0.35)" stroke-width="1.5" marker-end="url(#arr)"/>
+        <rect x="505" y="198" width="110" height="44" rx="10" fill="rgba(255,68,68,0.1)" stroke="rgba(255,68,68,0.3)" stroke-width="1"/>
+        <text x="560" y="217" text-anchor="middle" fill="#ff6666" font-size="11" font-weight="bold">AI与游戏未来</text>
+        <text x="560" y="232" text-anchor="middle" fill="#9ea3c4" font-size="10">有用的工具/人类创造力</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- CHAPTERS -->
+  <div class="section" id="ep493-chapters">
+    <div class="sec-label">CHAPTERS</div>
+    <div class="sec-title">章节结构（25个话题段落）</div>
+    <div class="chapters-grid">
+      <div class="chapter-item"><span class="chapter-ts">0:00</span><span class="chapter-name">精彩片段预览</span></div>
+      <div class="chapter-item"><span class="chapter-ts">1:27</span><span class="chapter-name">开场介绍</span></div>
+      <div class="chapter-item"><span class="chapter-ts">4:07</span><span class="chapter-name">早期游戏：街机/Zork/Doom</span></div>
+      <div class="chapter-item"><span class="chapter-ts">18:33</span><span class="chapter-name">写作生涯——170封拒稿信</span></div>
+      <div class="chapter-item"><span class="chapter-ts">34:06</span><span class="chapter-name">EverQuest 沉迷经历</span></div>
+      <div class="chapter-item"><span class="chapter-ts">47:04</span><span class="chapter-name">入职暴雪</span></div>
+      <div class="chapter-item"><span class="chapter-ts">1:02:32</span><span class="chapter-name">Jeff 人生最低谷</span></div>
+      <div class="chapter-item"><span class="chapter-ts">1:08:37</span><span class="chapter-name">One of Us（归属感）</span></div>
+      <div class="chapter-item"><span class="chapter-ts">1:12:54</span><span class="chapter-name">早期暴雪文化</span></div>
+      <div class="chapter-item"><span class="chapter-ts">1:32:36</span><span class="chapter-name">构建魔兽世界</span></div>
+      <div class="chapter-item"><span class="chapter-ts">1:50:20</span><span class="chapter-name">WoW 如何改变游戏业</span></div>
+      <div class="chapter-item"><span class="chapter-ts">2:07:42</span><span class="chapter-name">单人 vs 多人游戏</span></div>
+      <div class="chapter-item"><span class="chapter-ts">2:28:35</span><span class="chapter-name">暴雪如何做出伟大游戏</span></div>
+      <div class="chapter-item"><span class="chapter-ts">2:54:25</span><span class="chapter-name">网络毒性问题</span></div>
+      <div class="chapter-item"><span class="chapter-ts">3:01:59</span><span class="chapter-name">为什么 Titan 失败了</span></div>
+      <div class="chapter-item"><span class="chapter-ts">3:19:09</span><span class="chapter-name">守望先锋在六周内诞生</span></div>
+      <div class="chapter-item"><span class="chapter-ts">3:46:07</span><span class="chapter-name">最好的英雄们</span></div>
+      <div class="chapter-item"><span class="chapter-ts">3:54:37</span><span class="chapter-name">匹配系统的挑战</span></div>
+      <div class="chapter-item"><span class="chapter-ts">3:58:01</span><span class="chapter-name">Rust 游戏</span></div>
+      <div class="chapter-item"><span class="chapter-ts">4:08:22</span><span class="chapter-name">为什么离开暴雪</span></div>
+      <div class="chapter-item"><span class="chapter-ts">4:30:35</span><span class="chapter-name">暗黑破坏神 IV</span></div>
+      <div class="chapter-item"><span class="chapter-ts">4:32:03</span><span class="chapter-name">重返游戏开发</span></div>
+      <div class="chapter-item"><span class="chapter-ts">4:40:59</span><span class="chapter-name">加利福尼亚传说</span></div>
+      <div class="chapter-item"><span class="chapter-ts">4:54:44</span><span class="chapter-name">史上最伟大游戏</span></div>
+      <div class="chapter-item"><span class="chapter-ts">5:02:51</span><span class="chapter-name">AI 与游戏的未来</span></div>
+    </div>
+  </div>
+
+  <!-- INFOGRAPHIC -->
+  <div class="infographic" id="ep493-infographic">
+    <div class="sec-label">DESIGN PHILOSOPHY</div>
+    <div class="infographic-title">Jeff Kaplan 的游戏设计哲学</div>
+    <div class="infographic-sub">从五小时对话中提炼的核心设计理念，可视化呈现</div>
+
+    <!-- VENN: 三种乐趣 -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);font-weight:700;margin-bottom:18px;">① 三种乐趣的平衡</div>
+      <div class="venn-wrap">
+        <div class="venn-svg-box">
+          <svg viewBox="0 0 260 200" width="260" height="200" xmlns="http://www.w3.org/2000/svg">
+            <!-- Circle 1: Player -->
+            <circle cx="105" cy="80" r="64" fill="rgba(255,68,68,0.12)" stroke="rgba(255,68,68,0.5)" stroke-width="1.5"/>
+            <!-- Circle 2: Designer -->
+            <circle cx="155" cy="80" r="64" fill="rgba(92,240,176,0.12)" stroke="rgba(92,240,176,0.5)" stroke-width="1.5"/>
+            <!-- Circle 3: Computer -->
+            <circle cx="130" cy="128" r="64" fill="rgba(93,190,244,0.12)" stroke="rgba(93,190,244,0.5)" stroke-width="1.5"/>
+            <!-- Labels -->
+            <text x="75" y="58" text-anchor="middle" fill="#ff6666" font-size="11" font-weight="bold">玩家</text>
+            <text x="75" y="72" text-anchor="middle" fill="#ff6666" font-size="10">的乐趣</text>
+            <text x="188" y="58" text-anchor="middle" fill="#5cf0b0" font-size="11" font-weight="bold">设计师</text>
+            <text x="188" y="72" text-anchor="middle" fill="#5cf0b0" font-size="10">的乐趣</text>
+            <text x="130" y="178" text-anchor="middle" fill="#5dbef4" font-size="11" font-weight="bold">计算机</text>
+            <text x="130" y="192" text-anchor="middle" fill="#5dbef4" font-size="10">的乐趣</text>
+            <!-- Center -->
+            <text x="130" y="103" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="bold">伟大</text>
+            <text x="130" y="116" text-anchor="middle" fill="#fff" font-size="10.5" font-weight="bold">游戏</text>
+          </svg>
+        </div>
+        <div class="venn-legend">
+          <div class="venn-item">
+            <div class="venn-dot" style="background:var(--yt)"></div>
+            <div class="venn-text">
+              <h4>玩家的乐趣</h4>
+              <p>系统必须让玩家觉得好玩、有成就感、有情感连接——否则没人愿意继续玩。</p>
+            </div>
+          </div>
+          <div class="venn-item">
+            <div class="venn-dot" style="background:var(--g)"></div>
+            <div class="venn-text">
+              <h4>设计师的乐趣</h4>
+              <p>设计师必须有创作热情——没有热爱的设计师做不出有灵魂的游戏。</p>
+            </div>
+          </div>
+          <div class="venn-item">
+            <div class="venn-dot" style="background:var(--b)"></div>
+            <div class="venn-text">
+              <h4>计算机的乐趣</h4>
+              <p>技术层面要可行——再好的想法，如果服务器撑不住也是空谈。</p>
+            </div>
+          </div>
+          <div class="venn-item">
+            <div class="venn-dot" style="background:#fff;border:1px solid rgba(255,255,255,.3)"></div>
+            <div class="venn-text">
+              <h4 style="color:var(--text)">三者交集 = 伟大游戏</h4>
+              <p>"There's three types of fun: fun for the player, fun for the designer, and fun for the computer."</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOUR PRINCIPLES -->
+    <div style="margin-bottom:32px;">
+      <div style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);font-weight:700;margin-bottom:18px;">② 设计四原则</div>
+      <div class="principles-grid">
+        <div class="principle-card pc-1">
+          <div class="principle-icon">🌍</div>
+          <div class="principle-title">世界是游戏的主角</div>
+          <div class="principle-body">最好的游戏不是"产品"，而是一个让玩家愿意栖居、建立身份和归属感的世界。WoW 玩家纹上"部落"纹身，就是这个理念的最终体现。</div>
+          <div class="principle-quote">"WoW is a world. Like, it's a world that you can live in."</div>
+        </div>
+        <div class="principle-card pc-2">
+          <div class="principle-icon">🔄</div>
+          <div class="principle-title">失败是最好的素材</div>
+          <div class="principle-body">《泰坦》项目耗时 7 年后被砍掉，但其中的美术资产和角色概念成为《守望先锋》的起点。McCree（现 Cassidy）就诞生于一张废弃的星际争霸 MMO 概念图。</div>
+          <div class="principle-quote">"Overwatch came from the ashes of Titan."</div>
+        </div>
+        <div class="principle-card pc-3">
+          <div class="principle-icon">🚫</div>
+          <div class="principle-title">说"不"是领导力</div>
+          <div class="principle-body">暴雪最好的时期，Jeff 可以对任何功能说"不"。产品质量来自于知道什么不该做——无限制的"加功能"是游戏品质最大的敌人。</div>
+          <div class="principle-quote">"Overwatch's success came from saying no to Titan's failed features."</div>
+        </div>
+        <div class="principle-card pc-4">
+          <div class="principle-icon">🤝</div>
+          <div class="principle-title">信任专家的直觉</div>
+          <div class="principle-body">给顶尖专家充分的发言权，甚至从他们个人的爱好中提炼核心创意。Overwatch 的很多英雄原型来自艺术家团队的个人热情，而不是市场调研。</div>
+          <div class="principle-quote">"The best ideas came from trusting the experts on the team."</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECT COMPARISON -->
+    <div>
+      <div style="font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);font-weight:700;margin-bottom:18px;">③ 两款里程碑作品对比</div>
+      <div class="compare-wrap">
+        <div class="compare-card cc-wow">
+          <div class="compare-header">
+            <div class="compare-icon">🌍</div>
+            <div>
+              <div class="compare-name">魔兽世界 (WoW)</div>
+              <div class="compare-year">2004年发布 · MMORPG · 巅峰1200万订阅用户</div>
+            </div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-item">
+              <div class="compare-item-label">核心设计突破</div>
+              <div class="compare-item-val">任务驱动型升级系统——玩家通过体验故事而非机械刷级来成长；部落/联盟的阵营对立创造了真实的身份认同</div>
+            </div>
+            <div class="compare-item">
+              <div class="compare-item-label">最大挑战</div>
+              <div class="compare-item-val">服务器负载与大规模横向用户增长；面对 EverQuest II 的竞争压力，小团队如何做出更好的产品</div>
+            </div>
+            <div class="compare-item">
+              <div class="compare-item-label">Jeff 的角色</div>
+              <div class="compare-item-val">从最底层任务设计师起步，后升任游戏总监（"巫妖王之怒"资料片）</div>
+            </div>
+          </div>
+        </div>
+        <div class="compare-card cc-ow">
+          <div class="compare-header">
+            <div class="compare-icon">⚔️</div>
+            <div>
+              <div class="compare-name">守望先锋 (Overwatch)</div>
+              <div class="compare-year">2016年发布 · 英雄射击 · 从《泰坦》废墟中诞生</div>
+            </div>
+          </div>
+          <div class="compare-row">
+            <div class="compare-item">
+              <div class="compare-item-label">核心设计突破</div>
+              <div class="compare-item-val">英雄角色化与套餐式竞技——每个英雄都有独特个性和玩法，强调"值得奋斗的未来"的光明乐观世界观</div>
+            </div>
+            <div class="compare-item">
+              <div class="compare-item-label">最大挑战</div>
+              <div class="compare-item-val">在被取消项目的极度混乱中，6周内完成从 0 到原型的转型；后期守望先锋联赛引入资本后品质管控失守</div>
+            </div>
+            <div class="compare-item">
+              <div class="compare-item-label">Jeff 的角色</div>
+              <div class="compare-item-val">游戏总监，主导整个创意方向——直到2021年因无法接受"年度营收指标"要求而离职</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end infographic -->
+
+  <!-- GAMING LIFE -->
+  <div class="section" id="ep493-gaming">
+    <div class="sec-label">DEEP DIVE</div>
+    <div class="sec-title">🎮 从街机少年到游戏设计师</div>
+    <div class="theme-block">
+      <div class="theme-body">Jeff 生长在"街机黄金时代"，他清楚记得第一次看到 Pac-Man 时的震撼。少年时代的他和朋友骑自行车跑两个镇，就为了去玩街机。后来他沉迷文字冒险游戏 Zork——你只需输入"向西走"、"打开邮箱"，整个世界就打开了。</div>
+      <div class="quote-block">
+        <div class="quote-speaker">Jeff Kaplan</div>
+        <div class="quote-text">"Text-based game. You know, you just type in, 'Go west. Open mailbox.' You know? But it's that power of the imagination... You're transported. You're living there."</div>
+        <div class="quote-explain">文字游戏的魔力：只有文字，却能让你真实地活在那个世界里。这句话揭示了 Jeff 对"游戏是一个世界"而非"游戏是一个产品"的核心理念——这个理念后来贯穿了他整个职业生涯。</div>
+      </div>
+      <div class="theme-body">在成为游戏设计师之前，Jeff 梦想成为作家，但连续收到了 170 封退稿信。EverQuest 的出现彻底改变了他的人生方向——他沉迷到不可自拔，最终作为 EverQuest 的顶级玩家被 Blizzard 挖走，成了他们的第一批任务设计师。</div>
+      <div class="quote-block q-g">
+        <div class="quote-speaker">Jeff Kaplan</div>
+        <div class="quote-text">"My whole career and my family are thanks to EverQuest."</div>
+        <div class="quote-explain">一款游戏改变了一个人的整个人生轨迹。Jeff 的故事提醒我们：真正的热爱会找到出口，哪怕是在沉迷游戏这件"不正经"的事情上。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WOW -->
+  <div class="section" id="ep493-wow">
+    <div class="sec-label">DEEP DIVE</div>
+    <div class="sec-title">🌍 构建魔兽世界</div>
+    <div class="theme-block">
+      <div class="theme-body">Jeff 加入暴雪时，他只是"additional help"，没有资格在《魔兽争霸 III》的制作名单上署名。但机会很快到来——World of Warcraft 项目启动，他从最底层的任务设计师开始。那时整个团队面临巨大压力：竞争对手 EverQuest II 正在开发中，大家都不知道 WoW 能不能赢。</div>
+      <div class="quote-block q-b">
+        <div class="quote-speaker">Jeff Kaplan</div>
+        <div class="quote-text">"World of Warcraft, first of all, more than anything, is a world. Like, it's a world that you can live in."</div>
+        <div class="quote-explain">WoW 的核心设计哲学：它不是一款游戏，它是一个你可以栖居的世界。从一端走到另一端需要半小时，Horde 和 Alliance 的分野真实到玩家会在现实中纹身来表达归属。</div>
+      </div>
+      <div class="theme-body">Horde vs Alliance 的派系设定最初并非所有人同意，是 Metzen（暴雪创意总监）拍板决定的。Jeff 回忆，当时他们借鉴了 EverQuest 的三派系设定，最终选择了两派系方案，而这个决定后来成了 WoW 最深入人心的设计之一。</div>
+      <div class="quote-block q-p">
+        <div class="quote-speaker">Jeff Kaplan</div>
+        <div class="quote-text">"The amount of people who walk up to me and [show their tattoos]... Like, it's epic. It's like it's become who they are."</div>
+        <div class="quote-explain">游戏设计做到极致的样子：玩家会把游戏里的派系选择纹在身上，成为自我认同的一部分。WoW 不是娱乐产品，是一种身份认同。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERWATCH -->
+  <div class="section" id="ep493-overwatch">
+    <div class="sec-label">DEEP DIVE</div>
+    <div class="sec-title">⚔️ 守望先锋：从废墟里诞生的奇迹</div>
+    <div class="theme-block">
+      <div class="theme-body">暴雪曾有一个代号"泰坦"（Titan）的超级 MMO 项目，开发了七年，耗尽了数百名员工的心血，最终在 2013 年被彻底取消。这次失败是暴雪历史上最痛的时刻之一。但从废墟中，发生了一件不可思议的事——</div>
+      <div class="quote-block">
+        <div class="quote-speaker">Jeff Kaplan</div>
+        <div class="quote-text">"Overwatch in six weeks... It was supposed to be the greatest time ever if you think about it. Because [Titan was cancelled] and for a Blizzard game, it's kind of insane."</div>
+        <div class="quote-explain">《泰坦》取消后，Jeff 带领一个 40 人小组，用泰坦遗留的美术资产和概念，在六周内搭建出了守望先锋的原型。McCree（现在的 Cassidy）就是这么来的——他源自一个未发布的星际争霸 MMO 概念图。这就是创意的韧性：失败不是终点，是素材。</div>
+      </div>
+      <div class="theme-body">守望先锋联赛（Overwatch League）是另一个雄心勃勃却最终崩塌的项目。亿万富翁投资者买下城市队伍，梦想打造电竞版 NFL。但当资本进入后，原来的设计优先级完全被颠覆：</div>
+      <div class="quote-block q-o">
+        <div class="quote-speaker">Jeff Kaplan</div>
+        <div class="quote-text">"These teams now, we didn't just have executives at Blizzard... [They] quickly defaulted back to, 'How are we gonna survive?' ... And Overwatch 2 is out now, but it's not the Overwatch 2 that we planned and announced."</div>
+        <div class="quote-explain">联赛引入了大量外部投资人，财务压力取代了创意优先级。Jeff 最初规划的守望先锋 2 是一个有完整 PvE 战役的版本，最终发布的却完全不是那回事。对玩家来说这是遗憾，对 Jeff 来说这是彻底的心碎。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEAVING -->
+  <div class="section" id="ep493-leaving">
+    <div class="sec-label">DEEP DIVE</div>
+    <div class="sec-title">🚪 为什么离开暴雪</div>
+    <div class="theme-block">
+      <div class="theme-body">2021年，Jeff 突然宣布离职。外界猜测纷纷，但真正的原因从未被公开说出——直到这次对话。</div>
+      <div class="quote-block">
+        <div class="quote-speaker">Jeff Kaplan</div>
+        <div class="quote-text">"And he said, 'Overwatch has to make in 2020, and then every year after that, it needs a recurring revenue of X amount.' I never thought the day would come, and that was it. I was like, we're done here."</div>
+        <div class="quote-explain">一位高管告诉 Jeff：守望先锋每年必须产生固定数额的营收。这句话让他彻底崩溃。一个以"做最好的游戏"为信仰的创意人，无法接受游戏变成一个必须完成收入指标的机器。这是创意与资本之间无法调和的矛盾。</div>
+      </div>
+      <div class="quote-block q-g">
+        <div class="quote-speaker">Jeff Kaplan</div>
+        <div class="quote-text">"What eventually broke me was it used to be like in 2016 and 2017, I felt very in control of the product... And then as time went on, that feeling slowly eroded."</div>
+        <div class="quote-explain">这不是突然的崩溃，是缓慢的侵蚀。Jeff 描述了创作自主权被一点点剥夺的过程——这也是许多大公司里有创意理想的人共同面临的困境。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI -->
+  <div class="section" id="ep493-ai">
+    <div class="sec-label">DEEP DIVE</div>
+    <div class="sec-title">🤖 AI 与游戏的未来</div>
+    <div class="theme-block">
+      <div class="theme-body">Jeff 现在正在开发新游戏，AI 工具自然进入了他的工作流。他的态度既务实又谨慎：</div>
+      <div class="quote-block q-p">
+        <div class="quote-speaker">Jeff Kaplan</div>
+        <div class="quote-text">"AI to me right now currently, it's like an interesting fever dream, you know? It's useful for the mundane tasks... but you know, voice actors and artists, it can't be lifting from them without their permission. That's just stealing."</div>
+        <div class="quote-explain">Jeff 对 AI 的立场：有用（处理琐碎任务），但有边界（不能未经许可使用配音演员和艺术家的作品）。他不是 AI 反对者，但他清醒地区分了"工具"和"替代者"的概念。</div>
+      </div>
+      <div class="quote-block q-r">
+        <div class="quote-speaker">Jeff Kaplan</div>
+        <div class="quote-text">"Small studios are the future of gaming. The big studios basically acquire the small studios for new ideas... Small studios have hope, and AI can give them an even bigger advantage."</div>
+        <div class="quote-explain">这是 Jeff 对游戏业最乐观的预言：AI 能让小团队更有竞争力——过去需要一整个部门做的事，现在两三个人也许就能完成。大公司买走创意，但创意的诞生仍然在小团队。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAKEAWAYS 493 -->
+  <div class="section" id="ep493-takeaways">
+    <div class="sec-label">KEY TAKEAWAYS</div>
+    <div class="sec-title">💡 五个核心洞察</div>
+    <div class="takeaways">
+      <div class="takeaway-card accent-r">
+        <div class="takeaway-icon">🌍</div>
+        <div class="takeaway-title">游戏是一个世界，不是产品</div>
+        <div class="takeaway-text">WoW 的成功源于它创造了一个真实的世界，玩家在里面建立身份、友谊和记忆。产品会过时，但世界会让人留下。</div>
+      </div>
+      <div class="takeaway-card accent-g">
+        <div class="takeaway-icon">♻️</div>
+        <div class="takeaway-title">失败是创意的素材</div>
+        <div class="takeaway-text">《泰坦》耗时7年后被取消，但其中的角色和美术资产成为《守望先锋》的起点。Jeff 用6周从废墟里造出了一款传世之作。</div>
+      </div>
+      <div class="takeaway-card accent-p">
+        <div class="takeaway-icon">💰</div>
+        <div class="takeaway-title">资本进入时，创意就开始死去</div>
+        <div class="takeaway-text">守望先锋联赛引入亿万富翁投资者后，设计优先级全面失守。这是 Jeff 离职的根本原因：无法在收入指标的框架里做好游戏。</div>
+      </div>
+      <div class="takeaway-card accent-b">
+        <div class="takeaway-icon">🤖</div>
+        <div class="takeaway-title">AI 是工具，边界是尊重</div>
+        <div class="takeaway-text">用 AI 处理 UI 设计很好，但不能未经许可使用配音演员的声音。Jeff 对 AI 的态度：拥抱工具价值，坚守道德边界。</div>
+      </div>
+      <div class="takeaway-card accent-o">
+        <div class="takeaway-icon">🏆</div>
+        <div class="takeaway-title">史上最伟大游戏：塞尔达·荒野之息</div>
+        <div class="takeaway-text">"Every aspect is so thoughtful, so well designed. The art matches the design and the tech." 任天堂是 Mecca——来自那里的东西，你应该无条件相信。</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+</div><!-- end panel-493 -->
+
+<!-- ========== EP 492 ========== -->
+<div class="ep-panel" id="panel-492">
+
+  <div class="section" id="ep492-overview">
+    <div class="sec-label">EPISODE OVERVIEW</div>
+    <div class="sec-title">节目概览</div>
+    <div class="overview-box">
+      <h3>这期在聊什么？</h3>
+      <p>Rick Beato 是一个传奇人物：他有古典低音提琴学士学位和新英格兰音乐学院爵士吉他硕士，做了几十年的职业音乐人和制作人，五十多岁才开始做 YouTube——然后成了全球最大的音乐教育频道之一。</p>
+      <p style="margin-top:12px;">这期对话从"史上最伟大吉他独奏"开始，穿越爵士乐史、摇滚乐史，聊到 AI 对音乐创作的冲击，以及他如何看待 YouTube 版权系统和音乐产业的未来。对于不懂乐理的人，这也是一次极好的音乐入门体验。</p>
+    </div>
+
+    <!-- MIND MAP -->
+    <div class="mindmap-wrap">
+      <div class="mindmap-title">话题思维导图</div>
+      <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:300px;">
+        <defs>
+          <marker id="arr2" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
+            <polygon points="0 0, 6 2, 0 4" fill="rgba(124,106,247,0.5)"/>
+          </marker>
+        </defs>
+        <ellipse cx="350" cy="150" rx="68" ry="30" fill="rgba(124,106,247,0.15)" stroke="rgba(124,106,247,0.5)" stroke-width="1.5"/>
+        <text x="350" y="145" text-anchor="middle" fill="#a08cf7" font-size="12" font-weight="bold">Rick Beato</text>
+        <text x="350" y="161" text-anchor="middle" fill="#9ea3c4" font-size="10">音乐教育家</text>
+
+        <line x1="282" y1="138" x2="195" y2="100" stroke="rgba(124,106,247,0.35)" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <rect x="80" y="80" width="110" height="42" rx="10" fill="rgba(92,240,176,0.1)" stroke="rgba(92,240,176,0.3)" stroke-width="1"/>
+        <text x="135" y="98" text-anchor="middle" fill="#5cf0b0" font-size="11" font-weight="bold">吉他大师</text>
+        <text x="135" y="112" text-anchor="middle" fill="#9ea3c4" font-size="10">Gilmour/Miles Davis</text>
+
+        <line x1="282" y1="152" x2="185" y2="152" stroke="rgba(124,106,247,0.35)" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <rect x="75" y="133" width="105" height="42" rx="10" fill="rgba(93,190,244,0.1)" stroke="rgba(93,190,244,0.3)" stroke-width="1"/>
+        <text x="128" y="151" text-anchor="middle" fill="#5dbef4" font-size="11" font-weight="bold">音乐理论</text>
+        <text x="128" y="165" text-anchor="middle" fill="#9ea3c4" font-size="10">绝对音感/相对音感</text>
+
+        <line x1="282" y1="165" x2="195" y2="205" stroke="rgba(124,106,247,0.35)" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <rect x="80" y="186" width="110" height="42" rx="10" fill="rgba(240,160,96,0.1)" stroke="rgba(240,160,96,0.3)" stroke-width="1"/>
+        <text x="135" y="204" text-anchor="middle" fill="#f0a060" font-size="11" font-weight="bold">音乐史</text>
+        <text x="135" y="218" text-anchor="middle" fill="#9ea3c4" font-size="10">爵士/摇滚/古典</text>
+
+        <line x1="418" y1="138" x2="505" y2="100" stroke="rgba(124,106,247,0.35)" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <rect x="500" y="80" width="115" height="42" rx="10" fill="rgba(255,68,68,0.1)" stroke="rgba(255,68,68,0.3)" stroke-width="1"/>
+        <text x="558" y="98" text-anchor="middle" fill="#ff6666" font-size="11" font-weight="bold">AI 与音乐</text>
+        <text x="558" y="112" text-anchor="middle" fill="#9ea3c4" font-size="10">Suno/版权/人类创意</text>
+
+        <line x1="418" y1="152" x2="515" y2="152" stroke="rgba(124,106,247,0.35)" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <rect x="510" y="133" width="115" height="42" rx="10" fill="rgba(240,96,144,0.1)" stroke="rgba(240,96,144,0.3)" stroke-width="1"/>
+        <text x="568" y="151" text-anchor="middle" fill="#f06090" font-size="11" font-weight="bold">YouTube 之路</text>
+        <text x="568" y="165" text-anchor="middle" fill="#9ea3c4" font-size="10">五十岁开始/版权/成功</text>
+
+        <line x1="418" y1="165" x2="505" y2="205" stroke="rgba(124,106,247,0.35)" stroke-width="1.5" marker-end="url(#arr2)"/>
+        <rect x="500" y="186" width="115" height="42" rx="10" fill="rgba(124,106,247,0.1)" stroke="rgba(124,106,247,0.3)" stroke-width="1"/>
+        <text x="558" y="204" text-anchor="middle" fill="#a08cf7" font-size="11" font-weight="bold">人生建议</text>
+        <text x="558" y="218" text-anchor="middle" fill="#9ea3c4" font-size="10">好奇心/终身学习</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- GUITAR MASTERS -->
+  <div class="section" id="ep492-guitar">
+    <div class="sec-label">DEEP DIVE</div>
+    <div class="sec-title">🎸 史上最伟大吉他独奏</div>
+    <div class="theme-block">
+      <div class="theme-body">Rick 把《Comfortably Numb》的第二段独奏（David Gilmour 演奏）列为史上最伟大的吉他独奏。他在 YouTube 上做过一期相关视频，引发巨大讨论。</div>
+      <div class="quote-block q-p">
+        <div class="quote-speaker">Rick Beato</div>
+        <div class="quote-text">"I put Comfortably Numb as my favorite, as my top one... He has just an incredible melodic sense. He knows how phrases should be put together. There's a flow to his playing."</div>
+        <div class="quote-explain">Gilmour 的伟大不在于速度，而在于旋律感——每个音符都像是在讲一个完整的句子。Rick 用"phrases should be put together"形容这种特质，这正是音乐教育家的眼光：不看技巧，看结构。</div>
+      </div>
+      <div class="theme-body">Rick 和 David Gilmour 本人做过访谈，亲自研究了他的设备。有意思的细节：Gilmour 会在直播中即兴演奏独奏，然后当场说"我不会再那样演奏了"——因为每次都是不同的创作，他不想固化某个版本。</div>
+      <div class="quote-block q-b">
+        <div class="quote-speaker">Rick Beato</div>
+        <div class="quote-text">"He'll play a solo, and then after a while, you hear the solo, and it's like, 'Well, I'm not gonna play it like that any more.'"</div>
+        <div class="quote-explain">这是对"伟大演奏者"的终极定义：永远在创造，不重复自己。对比那些每场演出都精确复刻录音版本的乐手，Gilmour 的态度更像一个爵士乐手——每次演出都是新的即兴。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MUSIC THEORY -->
+  <div class="section" id="ep492-theory">
+    <div class="sec-label">DEEP DIVE</div>
+    <div class="sec-title">🎵 绝对音感 vs 相对音感</div>
+    <div class="theme-block">
+      <div class="theme-body">Rick 有一套完整的耳朵训练课程（BeatoEarTraining），他明确区分了两种听音能力，这对音乐学习者极有参考价值：</div>
+      <div class="quote-block q-g">
+        <div class="quote-speaker">Rick Beato</div>
+        <div class="quote-text">"Perfect pitch is the ability to identify any note without a reference tone... Relative pitch is basically learning how to identify pitches relative to a stated tonic or something that's been established."</div>
+        <div class="quote-explain">
+          <strong>绝对音感（Perfect Pitch）</strong>：无需参照，直接识别任意音符。天生的能力，后天极难习得。<br><br>
+          <strong>相对音感（Relative Pitch）</strong>：给定一个基准音，识别与其的音程关系。可以通过训练习得，对实际演奏更实用。Rick 说：几个月的练习就能有明显进步。
+        </div>
+      </div>
+      <div class="theme-body">Lex 问：相对音感有什么实际用处？Rick 解释：音程构成音阶，音阶构成和弦，和弦构成和声。一旦你的耳朵能识别音程，你就能听出任何歌曲的和声结构，能即兴演奏，能不用乐谱就把一首歌弹下来。</div>
+    </div>
+  </div>
+
+  <!-- AI MUSIC -->
+  <div class="section" id="ep492-ai">
+    <div class="sec-label">DEEP DIVE</div>
+    <div class="sec-title">🤖 AI 音乐：工具还是威胁？</div>
+    <div class="theme-block">
+      <div class="theme-body">Rick 从 2023 年就开始研究 AI 音乐生成工具，在 YouTube 上做了大量相关视频。他的工作流极有趣：</div>
+      <div class="quote-block">
+        <div class="quote-speaker">Rick Beato</div>
+        <div class="quote-text">"I did it in ChatGPT, the image. Then I went to Claude and I wrote the lyrics, 'cause Claude's way better at lyrics... And every other song, I've probably created 130 song ideas, out of which there's three good ones."</div>
+        <div class="quote-explain">Rick 的 AI 创作流程：Suno 生成音乐 + ChatGPT 生成封面图 + Claude 写歌词。他认为 Claude 在歌词写作上优于其他 AI。但在 130 个想法里只有 3 个是真正好的——这说明 AI 生成的内容仍然需要人类的筛选和判断力。</div>
+      </div>
+      <div class="quote-block q-o">
+        <div class="quote-speaker">Rick Beato</div>
+        <div class="quote-text">"That's why I'm not gonna use AI, Lex, is for that reason, because to me, it's just boring."</div>
+        <div class="quote-explain">Rick 最终的立场：他研究 AI 音乐是为了教学和了解趋势，但他自己不会用 AI 创作——因为学习乐器的过程本身就是意义所在。用 AI 跳过这个过程，就失去了音乐对他的价值。这是一个"过程即目的"的哲学立场。</div>
+      </div>
+      <div class="theme-body">Rick 也对 AI 训练数据的版权问题有强烈意见：他认为 AI 公司用已有音乐训练模型是一种"借用"，而不是直接复制，但边界在哪里还有很大争议。</div>
+      <div class="quote-block q-p">
+        <div class="quote-speaker">Lex Fridman</div>
+        <div class="quote-text">"I think the room for creativity right now for humans is lyrics. It seems like the lyrics that are being generated are pretty bad."</div>
+        <div class="quote-explain">Lex 的观察与 Rick 不谋而合：当前 AI 音乐最薄弱的环节是歌词——有意义、有情感的歌词仍然是人类创意的优势领域。这给音乐人指出了在 AI 时代的立足点。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- YOUTUBE JOURNEY -->
+  <div class="section" id="ep492-youtube">
+    <div class="sec-label">DEEP DIVE</div>
+    <div class="sec-title">📺 五十岁开始做 YouTube</div>
+    <div class="theme-block">
+      <div class="theme-body">Rick 在职业生涯晚期才开始做 YouTube，没有任何商业计划，只是想把自己知道的音乐知识分享给喜欢音乐的人。</div>
+      <div class="quote-block q-g">
+        <div class="quote-speaker">Rick Beato</div>
+        <div class="quote-text">"My theory is that somebody's gotta be successful, so why can't it be you? That was my [mindset] when I started."</div>
+        <div class="quote-explain">这是他整个 YouTube 旅程的核心心态：不是"我有什么资格"，而是"既然总得有人成功，为什么不是我？"这种心态消除了对失败的恐惧，让他专注于内容本身。</div>
+      </div>
+      <div class="quote-block q-b">
+        <div class="quote-speaker">Rick Beato</div>
+        <div class="quote-text">"My theory of my channel has always been, make videos on things I'm interested in. And at first, I thought nobody will watch this... [But] I've always made my own thumbnails."</div>
+        <div class="quote-explain">Rick 的方法论：对自己感兴趣的东西，持续输出高质量内容。他没有雇佣任何人——从拍摄、剪辑、缩略图设计到封面图，全部自己来。这种对每个细节的掌控，反而是他频道风格一致性的来源。</div>
+      </div>
+      <div class="theme-body">Rick 还聊了 YouTube 版权系统的荒谬：他的很多视频因为里面分析的音乐片段而被版权索赔，甚至包括他亲自采访的艺术家的音乐。他认为这是平台和唱片公司的利益博弈，而创作者夹在中间受伤。</div>
+    </div>
+  </div>
+
+  <!-- TAKEAWAYS 492 -->
+  <div class="section" id="ep492-takeaways">
+    <div class="sec-label">KEY TAKEAWAYS</div>
+    <div class="sec-title">💡 五个核心洞察</div>
+    <div class="takeaways">
+      <div class="takeaway-card accent-p">
+        <div class="takeaway-icon">🎸</div>
+        <div class="takeaway-title">伟大不在于速度，在于旋律</div>
+        <div class="takeaway-text">Comfortably Numb 的独奏伟大不因为 Gilmour 弹得快，而因为每个音符都有"流动感"，每个乐句都像完整的句子。</div>
+      </div>
+      <div class="takeaway-card accent-b">
+        <div class="takeaway-icon">👂</div>
+        <div class="takeaway-title">相对音感比绝对音感更实用</div>
+        <div class="takeaway-text">绝对音感天生，相对音感可练。几个月的音程训练就能让你真正"听懂"音乐——这是普通人也能习得的能力。</div>
+      </div>
+      <div class="takeaway-card accent-r">
+        <div class="takeaway-icon">🤖</div>
+        <div class="takeaway-title">AI 生成了大量内容，好的仍然稀缺</div>
+        <div class="takeaway-text">Rick 在 130 个 AI 音乐想法里只找到 3 个好的。AI 降低了创作门槛，但提高了筛选标准——人类判断力的价值反而更高了。</div>
+      </div>
+      <div class="takeaway-card accent-g">
+        <div class="takeaway-icon">🚀</div>
+        <div class="takeaway-title">五十岁开始不晚</div>
+        <div class="takeaway-text">"Someone's gotta be successful, why not you?" Rick 在专业音乐圈工作了几十年后才开始 YouTube，但他把所有的深度都带了进来——这就是"后发优势"。</div>
+      </div>
+      <div class="takeaway-card accent-o">
+        <div class="takeaway-icon">❤️</div>
+        <div class="takeaway-title">过程本身就是意义</div>
+        <div class="takeaway-text">Rick 拒绝用 AI 创作，因为学乐器的挣扎本身就是意义所在。跳过过程得到结果，就失去了最珍贵的东西。</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+  </div>
+
+</div><!-- end panel-492 -->
+
+<div class="footer">
+  Lex Fridman Podcast 中文解读 · 基于官方文字稿构建 · 内容版权归原作者所有
+</div>
+
+</div><!-- end main -->
+
+<script>
+// Progress bar
+window.addEventListener('scroll', () => {
+  const h = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progress-bar').style.width = (window.scrollY / h * 100) + '%';
+});
+
+// Tab switching
+function switchTab(ep) {
+  document.querySelectorAll('.ep-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ep-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + ep).classList.add('active');
+  document.getElementById('tab-' + ep).classList.add('active');
+}
+
+// Episode card switching
+function switchEp(ep, el) {
+  document.querySelectorAll('.ep-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  switchTab(ep);
+}
+
+// Active sidebar link on scroll
+const links = document.querySelectorAll('.sidebar nav a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  document.querySelectorAll('[id^="ep"]').forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 120) current = sec.id;
+  });
+  links.forEach(l => {
+    l.classList.toggle('active', l.getAttribute('href') === '#' + current);
+  });
+});
+</script>
+
+</body>
+</html>
