@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Head of Claude Code: What happens after coding is solved | Boris Cherny · Lenny's Podcast</title>
+<link href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f1a;--bg2:#13162a;--bg3:#1a1f36;--card:#1e2340;
+  --border:rgba(255,255,255,0.07);
+  --p:#7c6af7;--b:#5dbef4;--g:#5cf0b0;--o:#f0a060;--r:#f06090;--y:#f0d060;
+  --yt:#f06060;
+  --text:#e8eaf6;--text2:#9ea3c4;--text3:#6b70a0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;}
+#progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--yt),var(--p));width:0%;z-index:1000;transition:width .1s;}
+
+/* Sidebar */
+#sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;z-index:100;padding:0;}
+.sidebar-back-bar{padding:12px 16px 10px;border-bottom:1px solid var(--border);}
+.sidebar-back{font-size:11px;color:var(--text3);text-decoration:none;display:flex;align-items:center;gap:4px;transition:color .2s;font-weight:600;}
+.sidebar-back:hover{color:var(--p);}
+.nav-group{font-size:10px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;padding:12px 18px 4px;font-weight:700;}
+.nav-group.sep{border-top:1px solid var(--border);margin-top:6px;padding-top:14px;}
+.lib-item{display:flex;align-items:flex-start;gap:9px;padding:7px 16px;text-decoration:none;transition:all .2s;border-left:3px solid transparent;}
+.lib-item:hover{background:rgba(255,255,255,.03);}
+.lib-item.current{background:rgba(240,96,96,.09);border-left-color:var(--yt);}
+.lib-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.lib-dot.dl{background:var(--p);}
+.lib-dot.yt{background:var(--yt);}
+.lib-title{font-size:12px;font-weight:600;color:var(--text2);line-height:1.35;}
+.lib-item.current .lib-title{color:var(--text);}
+.lib-meta{font-size:10.5px;color:var(--text3);margin-top:1px;}
+.nav-link{display:block;padding:7px 16px 7px 20px;font-size:12px;color:var(--text3);text-decoration:none;transition:all .2s;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nav-link:hover,.nav-link.active{color:var(--text);border-left-color:var(--yt);background:rgba(240,96,96,.05);}
+
+/* Main */
+#main{margin-left:220px;min-height:100vh;}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#0d0f1a 0%,#1a0a0a 50%,#0a0d1a 100%);padding:22px 40px 20px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;display:flex;align-items:center;gap:40px;flex-wrap:wrap;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 80% at 80% 50%,rgba(240,96,96,0.07),transparent);}
+.hero-left{position:relative;z-index:1;flex:1;min-width:280px;}
+.hero-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;}
+.badge-yt{background:rgba(240,96,96,0.15);color:var(--yt);border:1px solid rgba(240,96,96,0.3);}
+.badge-free{background:rgba(92,240,176,0.12);color:var(--g);border:1px solid rgba(92,240,176,0.25);}
+.badge-level{background:rgba(93,190,244,0.12);color:var(--b);border:1px solid rgba(93,190,244,0.25);}
+.hero-left h1{font-size:22px;font-weight:900;line-height:1.25;margin-bottom:6px;}
+.hero-sub{font-size:13px;color:var(--text2);margin-bottom:12px;}
+.hero-link{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;background:var(--yt);color:white;border-radius:6px;text-decoration:none;font-size:12px;font-weight:700;transition:opacity .2s;}
+.hero-link:hover{opacity:.85;}
+.hero-stats{position:relative;z-index:1;display:flex;gap:28px;flex-wrap:wrap;align-items:center;}
+.hstat{text-align:center;}
+.hstat .n{font-size:24px;font-weight:900;color:var(--yt);line-height:1;}
+.hstat .l{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.5px;}
+
+/* Sections */
+.section{padding:40px 48px;border-bottom:1px solid var(--border);}
+.section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--yt);font-weight:700;margin-bottom:4px;}
+.section-title{font-size:1.4rem;font-weight:700;margin-bottom:20px;}
+
+/* Snap overview */
+.snap-overview{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:28px;}
+.snap-ov-hd{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--yt);font-weight:700;margin-bottom:20px;}
+.ring-row{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;margin-bottom:20px;}
+.ring-stat{display:flex;align-items:center;gap:14px;}
+.ring-track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:8;}
+.ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;}
+.ring-stat-val{font-size:18px;font-weight:900;line-height:1;}
+.ring-stat-name{font-size:12px;font-weight:600;color:var(--text2);margin-top:2px;}
+.ring-stat-sub{font-size:10px;color:var(--text3);}
+.snap-divider{height:1px;background:var(--border);margin:16px 0;}
+.snap-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+@media(max-width:900px){.snap-cols{grid-template-columns:1fr 1fr;}}
+.snap-col-item{font-size:13px;color:var(--text2);}
+.snap-col-item .sci-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.snap-col-item .sci-val{font-weight:700;color:var(--text);}
+
+/* Chapter accordion */
+.chapters-wrap{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.chapter-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s;}
+.chapter-card:hover{border-color:rgba(240,96,96,0.25);}
+.chapter-header{display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;}
+.chapter-time{background:rgba(240,96,96,0.12);color:var(--yt);font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;flex-shrink:0;font-family:monospace;}
+.chapter-title{font-weight:600;font-size:14px;flex:1;}
+.chapter-icon{color:var(--text3);font-size:11px;flex-shrink:0;transition:transform .2s;}
+.chapter-body{padding:0 18px 18px;display:none;font-size:14px;color:var(--text2);line-height:1.75;}
+.chapter-card.open .chapter-body{display:block;}
+.chapter-card.open .chapter-icon{transform:rotate(180deg);}
+
+/* Key point */
+.key-point{background:rgba(124,106,247,0.06);border-left:3px solid var(--p);border-radius:0 8px 8px 0;padding:10px 14px;margin:10px 0;font-size:13px;color:var(--text2);}
+.key-point .kp-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--p);margin-bottom:3px;font-weight:700;}
+.key-point.green{background:rgba(92,240,176,0.06);border-left-color:var(--g);}
+.key-point.green .kp-label{color:var(--g);}
+.key-point.red{background:rgba(240,96,96,0.06);border-left-color:var(--yt);}
+.key-point.red .kp-label{color:var(--yt);}
+.key-point.blue{background:rgba(93,190,244,0.06);border-left-color:var(--b);}
+.key-point.blue .kp-label{color:var(--b);}
+.key-point.yellow{background:rgba(240,208,96,0.06);border-left-color:var(--y);}
+.key-point.yellow .kp-label{color:var(--y);}
+
+/* Tags */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;margin:3px;}
+.tag.blue{background:rgba(93,190,244,0.12);color:var(--b);}
+.tag.green{background:rgba(92,240,176,0.12);color:var(--g);}
+.tag.red{background:rgba(240,96,96,0.12);color:var(--yt);}
+.tag.purple{background:rgba(124,106,247,0.12);color:var(--p);}
+.tag.yellow{background:rgba(240,208,96,0.12);color:var(--y);}
+
+/* Dual verdict */
+.dual-verdict{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;}
+@media(max-width:700px){.dual-verdict{grid-template-columns:1fr;}}
+.dv-box{background:var(--bg3);border-radius:10px;padding:16px;}
+.dv-label{font-size:10px;letter-spacing:2px;font-weight:700;text-transform:uppercase;margin-bottom:10px;}
+.dv-box.pos .dv-label{color:var(--g);}
+.dv-box.neg .dv-label{color:var(--yt);}
+.dv-item{font-size:13px;color:var(--text2);margin-bottom:6px;padding-left:14px;position:relative;line-height:1.55;}
+.dv-item::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;}
+.dv-box.pos .dv-item::before{background:var(--g);}
+.dv-box.neg .dv-item::before{background:var(--yt);}
+
+/* Quote */
+.quote-block{border-left:3px solid var(--yt);background:rgba(240,96,96,0.05);padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;font-style:italic;font-size:13px;color:var(--text);}
+.quote-block .quote-src{font-size:11px;color:var(--text3);margin-top:6px;font-style:normal;}
+
+/* Data chips */
+.data-row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;}
+.data-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;display:flex;flex-direction:column;gap:2px;}
+.data-chip .dc-val{font-size:16px;font-weight:900;color:var(--yt);}
+.data-chip .dc-val.blue{color:var(--b);}
+.data-chip .dc-val.green{color:var(--g);}
+.data-chip .dc-val.purple{color:var(--p);}
+.data-chip .dc-label{font-size:10px;color:var(--text3);letter-spacing:.5px;}
+
+/* Info grid */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+@media(max-width:800px){.info-grid{grid-template-columns:1fr;}}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.info-card h4{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.info-card.full{grid-column:1/-1;}
+
+/* Numbered list */
+.num-list{margin:10px 0;}
+.num-item{display:flex;gap:10px;margin-bottom:10px;font-size:13px;color:var(--text2);align-items:flex-start;line-height:1.6;}
+.ni-num{width:22px;height:22px;border-radius:4px;background:rgba(240,96,96,0.15);color:var(--yt);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.ni-num.blue{background:rgba(93,190,244,0.15);color:var(--b);}
+.ni-num.green{background:rgba(92,240,176,0.15);color:var(--g);}
+.ni-num.purple{background:rgba(124,106,247,0.15);color:var(--p);}
+
+/* Timeline */
+.timeline{position:relative;padding-left:28px;margin-top:16px;}
+.timeline::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--b),var(--g),var(--yt));}
+.tl-item{position:relative;margin-bottom:18px;}
+.tl-item::before{content:'';position:absolute;left:-22px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--b);border:2px solid var(--bg);}
+.tl-item.green::before{background:var(--g);}
+.tl-item.red::before{background:var(--yt);}
+.tl-item.purple::before{background:var(--p);}
+.tl-label{font-size:10px;color:var(--text3);margin-bottom:2px;letter-spacing:1px;text-transform:uppercase;}
+.tl-title{font-size:13px;font-weight:700;color:var(--text);}
+.tl-detail{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.6;}
+
+/* Summary box */
+.summary-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-top:24px;}
+.summary-box h3{font-size:15px;font-weight:700;margin-bottom:14px;}
+.summary-item{display:flex;gap:10px;margin-bottom:10px;font-size:13px;color:var(--text2);align-items:flex-start;}
+.si-num{width:20px;height:20px;border-radius:50%;background:rgba(240,96,96,0.15);color:var(--yt);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+
+/* Principle cards */
+.principle-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px;}
+@media(max-width:800px){.principle-grid{grid-template-columns:1fr 1fr;}}
+.principle-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:18px;}
+.pc-num{font-size:28px;font-weight:900;color:var(--yt);opacity:.3;line-height:1;margin-bottom:6px;}
+.pc-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.pc-desc{font-size:12px;color:var(--text3);line-height:1.6;}
+
+/* Source list */
+.source-list{display:flex;flex-direction:column;gap:6px;margin-top:14px;}
+.source-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);}
+.source-item a{color:var(--b);text-decoration:none;}
+.source-item a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<aside id="sidebar">
+  <div class="sidebar-back-bar">
+    <a href="index.html" class="sidebar-back">← 返回学习库</a>
+  </div>
+  <nav>
+    <div class="nav-group">🎓 DeepLearning.AI</div>
+    <a href="agent-skills-course.html" class="lib-item">
+      <span class="lib-dot dl"></span>
+      <div><div class="lib-title">Agent Skills with Anthropic</div><div class="lib-meta">Anthropic · 9课时</div></div>
+    </a>
+    <a href="agent-memory-course.html" class="lib-item">
+      <span class="lib-dot dl"></span>
+      <div><div class="lib-title">Agent Memory</div><div class="lib-meta">Oracle · 11课时</div></div>
+    </a>
+    <div class="nav-group">▶ YouTube</div>
+    <a href="lex-fridman-podcast.html" class="lib-item">
+      <span class="lib-dot yt"></span>
+      <div><div class="lib-title">Lex Fridman Podcast</div><div class="lib-meta">2期节目</div></div>
+    </a>
+    <a href="ai-explained.html" class="lib-item">
+      <span class="lib-dot yt"></span>
+      <div><div class="lib-title">AI Explained</div><div class="lib-meta">4期视频</div></div>
+    </a>
+    <a href="karpathy-llm-deep-dive.html" class="lib-item">
+      <span class="lib-dot yt"></span>
+      <div><div class="lib-title">Karpathy: LLM Deep Dive</div><div class="lib-meta">3h31m · 22章节</div></div>
+    </a>
+    <a href="lenny-boris-claude-code.html" class="lib-item current">
+      <span class="lib-dot yt"></span>
+      <div><div class="lib-title">Lenny × Boris Cherny</div><div class="lib-meta">Claude Code · 1h28m</div></div>
+    </a>
+    <div class="nav-group sep">本课导航</div>
+    <a href="#overview" class="nav-link">⚡ 一图速览</a>
+    <a href="#origin" class="nav-link">🌱 Claude Code 起源</a>
+    <a href="#growth" class="nav-link">📈 爆炸式增长</a>
+    <a href="#solved" class="nav-link">🧩 编程"已解决"</a>
+    <a href="#principles" class="nav-link">🎯 产品三原则</a>
+    <a href="#roles" class="nav-link">🔮 未来职业图景</a>
+    <a href="#chapters" class="nav-link">📋 全章节精读</a>
+    <a href="#tips" class="nav-link">🛠️ 实用技巧</a>
+    <a href="#summary" class="nav-link">🎯 核心要点</a>
+  </nav>
+</aside>
+
+<div id="main">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-badges">
+        <span class="badge badge-yt">▶ Lenny's Podcast</span>
+        <span class="badge badge-free">免费</span>
+        <span class="badge badge-level">产品 · AI工程 · 职业发展</span>
+      </div>
+      <h1>Head of Claude Code: What happens after coding is solved</h1>
+      <p class="hero-sub">Boris Cherny（Claude Code 创始人 · Anthropic）× Lenny Rachitsky · 2026年2月19日 · 中文深度解读</p>
+      <a href="https://www.youtube.com/watch?v=We7BZVKbCVw" target="_blank" class="hero-link">▶ 观看原视频（1h28m）</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="n">1h28m</div><div class="l">视频时长</div></div>
+      <div class="hstat"><div class="n">25</div><div class="l">章节</div></div>
+      <div class="hstat"><div class="n">41万</div><div class="l">播放量</div></div>
+      <div class="hstat"><div class="n">4%</div><div class="l">GitHub 提交占比</div></div>
+    </div>
+  </div>
+
+  <!-- Snapshot -->
+  <div class="section" id="overview">
+    <div class="section-label">SNAPSHOT</div>
+    <div class="section-title">⚡ 一图速览 · Claude Code 现状与未来</div>
+
+    <div class="snap-overview">
+      <div class="snap-ov-hd">核心数据亮点</div>
+      <div class="ring-row">
+        <div class="ring-stat">
+          <svg width="72" height="72" viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="38"/>
+            <circle class="ring-fill" cx="50" cy="50" r="38" stroke="#f06060" stroke-dasharray="220 240"/>
+            <text x="50" y="44" text-anchor="middle" fill="#f06060" font-size="14" font-weight="900" font-family="sans-serif">4%</text>
+            <text x="50" y="60" text-anchor="middle" fill="#9ea3c4" font-size="9" font-family="sans-serif">GitHub</text>
+          </svg>
+          <div>
+            <div class="ring-stat-val" style="color:var(--yt)">4%</div>
+            <div class="ring-stat-name">公开 GitHub 提交占比</div>
+            <div class="ring-stat-sub">Claude Code 生成的代码</div>
+          </div>
+        </div>
+        <div class="ring-stat">
+          <svg width="72" height="72" viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="38"/>
+            <circle class="ring-fill" cx="50" cy="50" r="38" stroke="#5dbef4" stroke-dasharray="190 240"/>
+            <text x="50" y="44" text-anchor="middle" fill="#5dbef4" font-size="13" font-weight="900" font-family="sans-serif">×2</text>
+            <text x="50" y="60" text-anchor="middle" fill="#9ea3c4" font-size="9" font-family="sans-serif">DAU</text>
+          </svg>
+          <div>
+            <div class="ring-stat-val" style="color:var(--b)">×2 倍</div>
+            <div class="ring-stat-name">日活用户上月涨幅</div>
+            <div class="ring-stat-sub">增速仍在加速</div>
+          </div>
+        </div>
+        <div class="ring-stat">
+          <svg width="72" height="72" viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="38"/>
+            <circle class="ring-fill" cx="50" cy="50" r="38" stroke="#5cf0b0" stroke-dasharray="170 240"/>
+            <text x="50" y="44" text-anchor="middle" fill="#5cf0b0" font-size="12" font-weight="900" font-family="sans-serif">30 PR</text>
+            <text x="50" y="60" text-anchor="middle" fill="#9ea3c4" font-size="9" font-family="sans-serif">每天</text>
+          </svg>
+          <div>
+            <div class="ring-stat-val" style="color:var(--g)">10–30</div>
+            <div class="ring-stat-name">Boris 每天合并 PR 数</div>
+            <div class="ring-stat-sub">全部由 Claude 代码编写</div>
+          </div>
+        </div>
+        <div class="ring-stat">
+          <svg width="72" height="72" viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="38"/>
+            <circle class="ring-fill" cx="50" cy="50" r="38" stroke="#7c6af7" stroke-dasharray="150 240"/>
+            <text x="50" y="44" text-anchor="middle" fill="#7c6af7" font-size="11" font-weight="900" font-family="sans-serif">10天</text>
+            <text x="50" y="60" text-anchor="middle" fill="#9ea3c4" font-size="9" font-family="sans-serif">Cowork</text>
+          </svg>
+          <div>
+            <div class="ring-stat-val" style="color:var(--p)">10 天</div>
+            <div class="ring-stat-name">Cowork 从零到上线</div>
+            <div class="ring-stat-sub">由 Claude Code 全程构建</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="snap-divider"></div>
+
+      <div class="snap-cols">
+        <div class="snap-col-item">
+          <div class="sci-label">嘉宾</div>
+          <div class="sci-val">Boris Cherny</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">Claude Code 创始人 · Anthropic</div>
+        </div>
+        <div class="snap-col-item">
+          <div class="sci-label">主持</div>
+          <div class="sci-val">Lenny Rachitsky</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">前 Airbnb PM · 56.5万订阅</div>
+        </div>
+        <div class="snap-col-item">
+          <div class="sci-label">核心论点</div>
+          <div class="sci-val">编码已被"解决"</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">工程师将进化为"构建者"</div>
+        </div>
+        <div class="snap-col-item">
+          <div class="sci-label">发布日期</div>
+          <div class="sci-val">2026年2月19日</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">Lenny's Podcast</div>
+        </div>
+        <div class="snap-col-item">
+          <div class="sci-label">产品亮点</div>
+          <div class="sci-val">Cowork · Claude Code</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">均由 Claude Code 自身构建</div>
+        </div>
+        <div class="snap-col-item">
+          <div class="sci-label">关键里程碑</div>
+          <div class="sci-val">从原型到 4% GitHub</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">仅用约一年时间</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+      <span class="tag red">Claude Code</span>
+      <span class="tag red">产品原则</span>
+      <span class="tag blue">AI 工程师</span>
+      <span class="tag green">编码已解决</span>
+      <span class="tag purple">Cowork</span>
+      <span class="tag yellow">职业未来</span>
+    </div>
+  </div>
+
+  <!-- Origin Story -->
+  <div class="section" id="origin">
+    <div class="section-label">ORIGIN STORY</div>
+    <div class="section-title">🌱 Claude Code 的诞生：从一个周末原型开始</div>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-label">起点 · 2025年初</div>
+        <div class="tl-title">周末黑客实验</div>
+        <div class="tl-detail">Boris 用一个周末做了一个简单的终端原型——让 Claude 直接在命令行里读写文件、运行代码。没有精心设计，只是一个快速验证想法的 hack。</div>
+      </div>
+      <div class="tl-item green">
+        <div class="tl-label">内部实验</div>
+        <div class="tl-title">Anthropic 工程师开始自己用</div>
+        <div class="tl-detail">原型在 Anthropic 内部传开，越来越多工程师把它集成进日常工作流。这种未预期的自发采用让 Boris 意识到这个工具触及了真实需求——这正是他所说的"潜在需求"信号。</div>
+      </div>
+      <div class="tl-item purple">
+        <div class="tl-label">短暂离开 · 2025年中</div>
+        <div class="tl-title">Boris 加入 Cursor，两周后返回</div>
+        <div class="tl-detail">Boris 曾短暂加入 Cursor，但仅两周后便回到 Anthropic。他认为，Anthropic 在"模型+工具"的垂直整合上有独特优势——Claude Code 可以直接访问最强的模型能力，这是外部工具难以复制的。</div>
+      </div>
+      <div class="tl-item red">
+        <div class="tl-label">高速增长 · 2026年初</div>
+        <div class="tl-title">占 GitHub 公开提交的 4%</div>
+        <div class="tl-detail">截至播出时，Claude Code 生成的代码已占全球 GitHub 公开提交的 4%，且日活用户环比翻倍。Spotify 报告其最优秀的开发者自 2025年12月起已完全不再手写代码。</div>
+      </div>
+    </div>
+
+    <div class="quote-block" style="margin-top:20px;">
+      "What began as a simple terminal-based prototype just a year ago has transformed the role of software engineering."
+      <div class="quote-src">— 节目简介</div>
+    </div>
+  </div>
+
+  <!-- Growth & Impact -->
+  <div class="section" id="growth">
+    <div class="section-label">GROWTH & IMPACT</div>
+    <div class="section-title">📈 爆炸式增长与真实影响</div>
+
+    <div class="data-row">
+      <div class="data-chip">
+        <div class="dc-val">4%</div>
+        <div class="dc-label">GitHub 公开提交占比</div>
+      </div>
+      <div class="data-chip">
+        <div class="dc-val">×2</div>
+        <div class="dc-label">上月日活用户涨幅</div>
+      </div>
+      <div class="data-chip">
+        <div class="dc-val green">10–30</div>
+        <div class="dc-label">Boris 每日 PR 数量</div>
+      </div>
+      <div class="data-chip">
+        <div class="dc-val purple">Nov'25</div>
+        <div class="dc-label">Boris 最后一次手写代码</div>
+      </div>
+    </div>
+
+    <div class="info-grid" style="margin-top:20px;">
+      <div class="info-card">
+        <h4>🎵 Spotify 案例</h4>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">Spotify 公开表示，其最优秀的工程师自 2025 年 12 月起已完全不再手写代码。这不是替代，而是进化——他们把时间用在架构决策、产品方向和系统设计上。</p>
+      </div>
+      <div class="info-card">
+        <h4>⚡ Boris 个人工作流</h4>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">Boris 本人自 2025 年 11 月起就没有再手动编辑过任何一行代码。他每天通过 Claude Code 生成并合并 10 到 30 个 Pull Request，工作重心完全转向了产品方向和决策。</p>
+      </div>
+      <div class="info-card">
+        <h4>🏢 全团队都在写代码</h4>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">在 Claude Code 团队里，不只是工程师在用 Claude Code——产品经理、设计师、财务、数据科学家都在借助它构建功能和工具。这印证了 Boris 的"构建者"理念。</p>
+      </div>
+      <div class="info-card">
+        <h4>🚀 Cowork：10 天从零上线</h4>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">Cowork（面向非开发者的桌面 AI 产品）从构思到上线只用了 10 天，全程由 Claude Code 构建。这个速度在传统开发模式下需要数月。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Coding is Solved -->
+  <div class="section" id="solved">
+    <div class="section-label">CORE THESIS</div>
+    <div class="section-title">🧩 "编程已被解决"——这到底意味着什么？</div>
+
+    <div class="quote-block">
+      "Coding is largely solved. The primary challenge now is prioritizing ideas for development."
+      <div class="quote-src">— Boris Cherny，播客节目中</div>
+    </div>
+
+    <p style="font-size:14px;color:var(--text2);line-height:1.8;margin:16px 0;">Boris 并不是说"不再需要人类"，而是说：<strong style="color:var(--text);">把想法转化为可工作代码这件事，已经不再是瓶颈</strong>。瓶颈从"怎么写代码"转移到了"构建什么"和"为什么构建它"。</p>
+
+    <div class="dual-verdict">
+      <div class="dv-box pos">
+        <div class="dv-label">✅ Boris 的核心论点</div>
+        <div class="dv-item">将想法转化为代码的能力不再是瓶颈</div>
+        <div class="dv-item">工程师的身份正在从"打字员"进化为"构建者"</div>
+        <div class="dv-item">判断力、优先级和产品直觉的价值大幅提升</div>
+        <div class="dv-item">2026 年底"软件工程师"职称可能开始消失</div>
+        <div class="dv-item">每个人都可以成为构建者（PM、设计师、运营均如此）</div>
+      </div>
+      <div class="dv-box neg">
+        <div class="dv-label">⚠️ 争议与反驳</div>
+        <div class="dv-item">复杂系统架构设计仍需深厚技术背景</div>
+        <div class="dv-item">调试 AI 生成代码需要理解代码逻辑</div>
+        <div class="dv-item">"打字"只是编码的一小部分，系统思维才是核心</div>
+        <div class="dv-item">某些批评者认为 Boris 混淆了"编码"与"打字"</div>
+        <div class="dv-item">代码审查和安全仍需专业工程师把关</div>
+      </div>
+    </div>
+
+    <div class="key-point blue" style="margin-top:20px;">
+      <div class="kp-label">📖 印刷机类比</div>
+      Boris 用古腾堡印刷机来类比 AI 对编程的影响：印刷机没有消灭作家，而是让更多人能够写作和出版。AI 编码工具同理——不是取代工程师，而是让更多人能参与构建软件。
+    </div>
+  </div>
+
+  <!-- Principles -->
+  <div class="section" id="principles">
+    <div class="section-label">PRODUCT PRINCIPLES</div>
+    <div class="section-title">🎯 Boris 的反直觉产品原则</div>
+
+    <p style="font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:20px;">Boris 分享了他在 Claude Code 团队践行的核心原则——其中很多与传统产品智慧相悖，但实践证明极为有效。</p>
+
+    <div class="principle-grid">
+      <div class="principle-card">
+        <div class="pc-num">01</div>
+        <div class="pc-title">🪙 故意"欠资"团队</div>
+        <div class="pc-desc">给团队充足的计算资源（无限 token），但在人员和时间上故意保持精简。限制反而激发创造力，避免"人多乱"的熵增。</div>
+      </div>
+      <div class="principle-card">
+        <div class="pc-num">02</div>
+        <div class="pc-title">🔑 给工程师无限 Token</div>
+        <div class="pc-desc">让工程师在无 token 限制的环境下使用 AI——这是发现真实产品边界和下一步方向最快的方法，也能建立对产品的真实信任。</div>
+      </div>
+      <div class="principle-card">
+        <div class="pc-num">03</div>
+        <div class="pc-title">🔭 追踪"潜在需求"</div>
+        <div class="pc-desc">当用户用一个工具做它"不应该"做的事时，这就是金矿。Boris 定义潜在需求为"用户用产品做非设计用途的行为"——它指向了下一个产品机会。</div>
+      </div>
+      <div class="principle-card">
+        <div class="pc-num">04</div>
+        <div class="pc-title">🧪 实验优先</div>
+        <div class="pc-desc">AI 产品的变化速度远超任何规划周期。最重要的能力是快速实验、快速学习。不要在尚未验证的方向上过度投入。</div>
+      </div>
+      <div class="principle-card">
+        <div class="pc-num">05</div>
+        <div class="pc-title">🏗️ 自己用自己的产品</div>
+        <div class="pc-desc">Claude Code 是用 Claude Code 构建的，Cowork 也是。这不只是营销说法——它确保团队能第一手感受用户痛点，让反馈循环极短。</div>
+      </div>
+      <div class="principle-card">
+        <div class="pc-num">06</div>
+        <div class="pc-title">🌍 拥抱"三层 AI 安全"</div>
+        <div class="pc-desc">Anthropic 的 AI 安全体系分三层：模型层（训练期价值观）、产品层（使用政策）和社会层（外部规范与法规）。三者缺一不可。</div>
+      </div>
+    </div>
+
+    <div class="key-point green" style="margin-top:20px;">
+      <div class="kp-label">💡 新成员必知三原则</div>
+      Boris 对每位新加入团队的成员分享三条原则：<strong style="color:var(--text);">① 用产品本身构建产品；② 潜在需求是最重要的信号；③ 实验比规划更重要</strong>。这三条也是 Claude Code 快速成功的核心密码。
+    </div>
+  </div>
+
+  <!-- Future Roles -->
+  <div class="section" id="roles">
+    <div class="section-label">FUTURE OF WORK</div>
+    <div class="section-title">🔮 AI 时代：哪些职业正在被重塑？</div>
+
+    <p style="font-size:14px;color:var(--text2);line-height:1.8;margin-bottom:16px;">在编程之后，Boris 认为 AI 将依次重塑以下职业领域——顺序大致是"工具化程度"从高到低：</p>
+
+    <div class="num-list">
+      <div class="num-item">
+        <div class="ni-num">1</div>
+        <div><strong style="color:var(--text);">软件工程师（已进行中）</strong>——"打字"部分已被 AI 接管，未来角色是架构师和构建者。预计"软件工程师"职称到 2026 年底开始淡出。</div>
+      </div>
+      <div class="num-item">
+        <div class="ni-num blue">2</div>
+        <div><strong style="color:var(--text);">知识工作者·文档/分析</strong>——法律文件、财务分析、报告写作等重复性知识工作将快速自动化。Cowork 正是针对这一场景设计的。</div>
+      </div>
+      <div class="num-item">
+        <div class="ni-num green">3</div>
+        <div><strong style="color:var(--text);">产品经理 & 设计师</strong>——AI 工具使 PM 和设计师能直接构建原型甚至产品，大幅缩短从构想到落地的周期。</div>
+      </div>
+      <div class="num-item">
+        <div class="ni-num purple">4</div>
+        <div><strong style="color:var(--text);">招聘与人力资源</strong>——Metaview 等 AI 招聘平台正在重构面试、筛选和候选人沟通流程（节目赞助商之一）。</div>
+      </div>
+      <div class="num-item">
+        <div class="ni-num" style="background:rgba(240,208,96,0.15);color:var(--y);">5</div>
+        <div><strong style="color:var(--text);">影响力·人际关系</strong>——Jessica Fain（下一期嘉宾）认为"影响力"是 AI 难以替代的最后一种核心技能，面向人的沟通和信任建立仍是人类优势。</div>
+      </div>
+    </div>
+
+    <div class="key-point yellow" style="margin-top:16px;">
+      <div class="kp-label">📊 调查数据</div>
+      节目中引用了 Lenny 在 X（推特）上发起的民调：<strong style="color:var(--text);">哪些职业的从业者在 AI 时代反而更享受工作？</strong> 结果显示：使用 AI 工具最深入的开发者群体，工作满意度反而显著提升——因为他们从重复性任务中解放了出来。
+    </div>
+  </div>
+
+  <!-- All Chapters -->
+  <div class="section" id="chapters">
+    <div class="section-label">ALL CHAPTERS</div>
+    <div class="section-title">📋 全章节精读（25 章）</div>
+
+    <div class="chapters-wrap">
+
+      <div class="chapter-card open">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">00:00</span>
+          <span class="chapter-title">Introduction to Boris and Claude Code</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Lenny 介绍 Boris Cherny 是 Claude Code 的创始人和负责人。Boris 回顾了自己在 Anthropic 的角色——他最初是一名工程师，Claude Code 源于他对"如何让 AI 真正帮助开发者"这一问题的实验性探索。</p>
+          <div class="key-point">
+            <div class="kp-label">背景</div>
+            Boris 是 TypeScript 领域知名工程师（《Programming TypeScript》作者），在加入 Anthropic 之前曾在 Facebook 工作多年。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">03:45</span>
+          <span class="chapter-title">Why Boris briefly left Anthropic for Cursor（and what brought him back）</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 坦诚地聊了他曾短暂加入 Cursor 的经历。Cursor 是当时市场上最热门的 AI 代码编辑器，估值超过 30 亿美元。然而仅两周后他就决定回到 Anthropic。</p>
+          <div class="key-point red">
+            <div class="kp-label">关键洞察</div>
+            Boris 认为，在"模型提供者"内部构建开发工具有独特优势：可以直接访问最新模型能力、更快速地迭代提示和微调。这种垂直整合的优势是外部工具难以复制的护城河。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">05:35</span>
+          <span class="chapter-title">One year of Claude Code</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>一年时间，Claude Code 从一个终端原型成长为占全球 GitHub 公开提交 4% 的工具，日活用户上月翻倍。Boris 回顾了这一年最出乎意料的发展：最大的用户群体并非他们最初预想的独立开发者，而是大型企业的工程团队。</p>
+          <div class="data-row">
+            <div class="data-chip"><div class="dc-val">4%</div><div class="dc-label">GitHub 占比</div></div>
+            <div class="data-chip"><div class="dc-val">×2</div><div class="dc-label">上月 DAU 增幅</div></div>
+            <div class="data-chip"><div class="dc-val green">1年</div><div class="dc-label">从原型到 4%</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">08:41</span>
+          <span class="chapter-title">The origin story of Claude Code</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Claude Code 的诞生是一个经典的"内部工具外部化"故事。Boris 做了一个可以让 Claude 读写本地文件、运行 shell 命令的原型，只是为了自己用。当这个工具在 Anthropic 内部广泛传播后，他意识到这是一个真实的产品机会。</p>
+          <div class="key-point green">
+            <div class="kp-label">潜在需求信号</div>
+            非预期的内部采用，是最强的产品-市场契合信号。用户用你的工具做它"不应该"做的事，意味着他们正在为一个未满足的需求找解决方案。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">13:29</span>
+          <span class="chapter-title">How fast AI is transforming software development</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>AI 对软件开发的改变速度远超所有预期。Boris 引用 Spotify 案例：其最优秀的开发者自 2025年12月起已完全停止手写代码，但生产力并未下降，反而显著提升。他认为"AI 编程"在精英工程师群体中的渗透率已经相当高。</p>
+          <div class="key-point blue">
+            <div class="kp-label">Spotify 数据点</div>
+            Spotify 最优秀的开发者在 2025年12月后完全使用 AI 编写代码（TechCrunch 报道），是 AI 重塑软件开发的标志性里程碑。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">15:01</span>
+          <span class="chapter-title">The importance of experimentation in AI innovation</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 强调：在 AI 时代，能力的进化速度远超任何产品规划周期。因此，团队的核心竞争力不是"更好的计划"，而是"更快的实验速度"。Claude Code 的很多关键功能，都是从意料之外的用户行为中发现的。</p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">16:17</span>
+          <span class="chapter-title">Boris's current coding workflow（100% AI-written）</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 详细描述了他的日常工作流程：他通过自然语言向 Claude Code 描述需要的功能，Claude Code 生成整个 PR，他审查后合并。他已经超过三个月没有手动输入过任何一行代码。</p>
+          <div class="key-point">
+            <div class="kp-label">每日 PR 数量</div>
+            Boris 每天合并 10 到 30 个 Pull Request，全部由 Claude Code 生成。他的主要工作变成了：定义需求、审查代码逻辑、判断产品方向。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">17:32</span>
+          <span class="chapter-title">The next frontier</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>编程之后，下一个前沿是什么？Boris 认为是"所有知识工作的自动化"——不只是写代码，而是所有可以被拆解为清晰步骤的脑力劳动。Cowork 就是这个愿景下的产物，专门为非技术用户在文件、数据和任务管理层面提供 AI 辅助。</p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">22:24</span>
+          <span class="chapter-title">The downside of rapid innovation</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>快速创新也有代价：技术负债积累更快、团队适应压力更大、用户可能跟不上产品迭代节奏。Boris 坦诚地聊了 Claude Code 团队在快速扩张过程中遇到的挑战，包括文档滞后、工具稳定性问题等。</p>
+          <div class="key-point red">
+            <div class="kp-label">核心张力</div>
+            快速实验 vs. 产品稳定性——Claude Code 团队的解法是：用 Claude Code 本身来维护和修复 Claude Code 的 bug，形成自我改进的闭环。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">24:02</span>
+          <span class="chapter-title">Principles for the Claude Code team</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 分享了他向每一位新加入团队成员传递的三条原则：</p>
+          <div class="num-list">
+            <div class="num-item">
+              <div class="ni-num">1</div>
+              <div><strong style="color:var(--text);">用产品本身构建产品</strong>——这不仅能发现 bug，更能建立团队对产品的真实信任和深度理解。</div>
+            </div>
+            <div class="num-item">
+              <div class="ni-num blue">2</div>
+              <div><strong style="color:var(--text);">潜在需求是最重要的产品信号</strong>——用户用工具做非预期的事情，比任何用户访谈都更有价值。</div>
+            </div>
+            <div class="num-item">
+              <div class="ni-num green">3</div>
+              <div><strong style="color:var(--text);">实验比规划更重要</strong>——在 AI 时代，世界变化太快，最好的策略是保持小步快跑，快速学习。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">26:48</span>
+          <span class="chapter-title">Why you should give engineers unlimited tokens</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>这是本期最反直觉的建议之一。Boris 认为，给工程师无限 token 配额（不限制 AI 使用量）是最好的产品投资——它让工程师能够在没有顾虑的情况下全力实验，同时也是发现产品边界和下一步方向最快的方法。</p>
+          <div class="quote-block">
+            "The token cost is trivial compared to the engineering time cost. Let your engineers use AI without limits."
+            <div class="quote-src">— Boris Cherny</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">27:55</span>
+          <span class="chapter-title">Will coding skills still matter in the future?</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 的回答：<strong style="color:var(--text);">会，但方式不同。</strong> 你不再需要记忆语法，但你需要理解系统设计原则、能够判断 AI 生成代码的质量、能够描述你想要什么。代码素养（code literacy）变得比代码编写（code writing）更重要。</p>
+          <div class="key-point green">
+            <div class="kp-label">新型技能栈</div>
+            未来工程师需要的核心能力：系统思维、需求拆解能力、AI 输出判断力、跨领域沟通能力——以及知道什么时候让 AI 做、什么时候自己做。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">32:15</span>
+          <span class="chapter-title">The printing press analogy for AI's impact</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 用古腾堡印刷机类比 AI 对编程的影响：印刷机出现之前，写作是精英技能，只有少数人掌握。印刷机让写作能力大众化，但也创造了出版业、新闻业等全新行业。AI 编码工具同理——它不会消灭工程师，而是让更多人能够构建软件，并催生全新的职业形态。</p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">36:01</span>
+          <span class="chapter-title">Which roles will AI transform next?</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>在软件工程之后，Boris 认为 AI 将依次重塑：知识工作者（文档、分析）→ 产品/设计 → 招聘/人力 → 客户服务 → 教育。他特别指出，<strong style="color:var(--text);">需要深度人际信任和情感连接的工作</strong>，是 AI 最难替代的领域。</p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">40:41</span>
+          <span class="chapter-title">Tips for succeeding in the AI era</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 给出了在 AI 时代脱颖而出的实用建议：</p>
+          <div class="num-list">
+            <div class="num-item"><div class="ni-num">1</div><div>立即开始深度使用 AI 工具，不要只是浅尝辄止</div></div>
+            <div class="num-item"><div class="ni-num blue">2</div><div>专注发展"判断力"而非"执行力"——什么值得做比怎么做更重要</div></div>
+            <div class="num-item"><div class="ni-num green">3</div><div>跨领域学习，成为"T型人才"——AI 已经帮你覆盖了深度，宽度是你的竞争力</div></div>
+            <div class="num-item"><div class="ni-num purple">4</div><div>主动把自己放在 AI 转型最前沿的团队和公司</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">44:37</span>
+          <span class="chapter-title">Poll: Which roles are enjoying their jobs more with AI</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Lenny 在 X 上发起的调查显示，深度使用 AI 工具的工程师群体，工作满意度反而显著提升。这与"AI 会让工作更枯燥"的直觉相反——原因是 AI 承担了重复劳动，让人得以专注于更有创造性的工作。</p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">46:32</span>
+          <span class="chapter-title">The principle of latent demand in product development</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>这是本期最有价值的产品洞察之一。Boris 定义"潜在需求"为：<strong style="color:var(--text);">用户用产品做其非设计用途的方式，揭示了他们真正想要什么。</strong></p>
+          <div class="key-point blue">
+            <div class="kp-label">Claude Code 的潜在需求案例</div>
+            早期用户开始用 Claude Code 管理文件、写邮件、整理文档——这些都不是设计用途。这个信号直接催生了 Cowork 的立项：为非开发者提供 AI 文件和任务管理工具。
+          </div>
+          <p style="font-size:13px;color:var(--text2);margin-top:10px;">另一个案例：用户开始在 Claude Code 里管理 GitHub Issue、发 PR 评论——这直接推动了 GitHub 集成的优先级提升。</p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">51:53</span>
+          <span class="chapter-title">How Cowork was built in just 10 days</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Cowork（Anthropic 面向非开发者的桌面 AI 工具）从立项到上线只用了 10 天，全程由 Claude Code 构建。</p>
+          <div class="key-point green">
+            <div class="kp-label">Cowork 定位</div>
+            Cowork 是 Claude Code 面向非技术用户的"降维"产品——不需要懂代码，只需要描述任务，AI 就能完成文件整理、数据处理、邮件草稿等工作流自动化。它的诞生直接来源于 Claude Code 用户的"潜在需求"信号。
+          </div>
+          <div class="data-row">
+            <div class="data-chip"><div class="dc-val purple">10天</div><div class="dc-label">从立项到上线</div></div>
+            <div class="data-chip"><div class="dc-val green">100%</div><div class="dc-label">Claude Code 构建</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">54:04</span>
+          <span class="chapter-title">The three layers of AI safety at Anthropic</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 解释了 Anthropic 的三层 AI 安全体系：</p>
+          <div class="num-list">
+            <div class="num-item"><div class="ni-num">1</div><div><strong style="color:var(--text);">模型层（训练期）</strong>——在模型训练阶段植入核心价值观和安全边界，这是最根本的防线。</div></div>
+            <div class="num-item"><div class="ni-num blue">2</div><div><strong style="color:var(--text);">产品层（使用政策）</strong>——通过使用条款、API 政策和产品设计约束，防止滥用。</div></div>
+            <div class="num-item"><div class="ni-num green">3</div><div><strong style="color:var(--text);">社会层（外部规范）</strong>——与监管机构、研究者和社会各方协作，建立外部规范和法律框架。</div></div>
+          </div>
+          <div class="key-point red">
+            <div class="kp-label">与 Agent 焦虑的关联</div>
+            当 Claude Code 作为 Agent 自主运行时，安全层级的重要性被放大——一旦模型层的价值观不够稳健，Agent 的自主行动可能带来不可预期的后果。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">59:35</span>
+          <span class="chapter-title">Anxiety when AI agents aren't working</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 聊到了一个意外但真实的心理现象：当 Claude Code 作为 Agent 在后台运行任务时，如果很久没有输出，他会感到焦虑——就像委托了一件事给一个沉默的同事。他认为这是 AI Agent UX 需要解决的重要问题：<strong style="color:var(--text);">如何让用户在等待异步任务时感到安心？</strong></p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">01:02:25</span>
+          <span class="chapter-title">Boris's Ukrainian roots</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>轻松的个人环节。Boris 分享了他的乌克兰背景，以及成长经历如何影响了他对"用更少资源做更多事"的执念——这也体现在他"故意欠资团队"的管理哲学中。</p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">01:03:21</span>
+          <span class="chapter-title">Advice for building AI products</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 给 AI 产品创业者的建议：</p>
+          <div class="num-list">
+            <div class="num-item"><div class="ni-num">1</div><div>找到一个真实存在的潜在需求，而不是想象中的用户痛点</div></div>
+            <div class="num-item"><div class="ni-num blue">2</div><div>尽量垂直整合——靠近模型能力，避免"中间层"的脆弱性</div></div>
+            <div class="num-item"><div class="ni-num green">3</div><div>用 AI 工具构建 AI 产品——这不只是效率问题，更是产品理解问题</div></div>
+            <div class="num-item"><div class="ni-num purple">4</div><div>优先招聘能深度使用 AI 的人，而不只是写 AI 代码的人</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">01:08:38</span>
+          <span class="chapter-title">Pro tips for using Claude Code effectively</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Boris 分享了他个人最常用的 Claude Code 使用技巧（详见下方"实用技巧"专区）。</p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">01:11:16</span>
+          <span class="chapter-title">Thoughts on Codex</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>对于 OpenAI 的 Codex，Boris 认为这是一个重要的验证信号：整个行业都在朝 AI 编码工具的方向聚焦。竞争加剧反而对整个生态有利——更多玩家意味着更快的迭代和更多的用户教育。他对 Claude Code 的竞争优势保持自信：深度的模型整合和更强的 Agent 能力。</p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">01:12:13</span>
+          <span class="chapter-title">Boris's post-AGI plans</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>轻松的未来畅想：当 AGI 真正到来后，Boris 想做什么？他的答案出人意料——他说他想重新学习写代码，就像有人买了汽车后反而会想学骑马一样。当某件事变成可选项而非必需项，它反而会变得更美好。</p>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">01:14:02</span>
+          <span class="chapter-title">Lightning round and final thoughts</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>闪电问答环节。Boris 的几个快问快答摘录：</p>
+          <div class="num-list">
+            <div class="num-item"><div class="ni-num">Q</div><div><strong style="color:var(--text);">最被低估的 AI 工具特性？</strong>——长上下文（Long Context）。大多数人只是让 AI 回答问题，而没有让它真正"理解"整个代码库。</div></div>
+            <div class="num-item"><div class="ni-num blue">Q</div><div><strong style="color:var(--text);">给刚开始用 Claude Code 的人一条建议？</strong>——从一个真实的、让你感到烦恼的小任务开始，不要先看教程，直接用。</div></div>
+            <div class="num-item"><div class="ni-num green">Q</div><div><strong style="color:var(--text);">最喜欢的 Claude 模型特性？</strong>——诚实性（Honesty）。Claude 会告诉你它不确定，而不是编造答案。</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Pro Tips -->
+  <div class="section" id="tips">
+    <div class="section-label">PRO TIPS</div>
+    <div class="section-title">🛠️ Claude Code 实用技巧（Boris 亲授）</div>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <h4>📁 给 Claude 完整上下文</h4>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">不要只描述你想要的功能，要让 Claude Code 先阅读和理解整个代码库（或相关模块）。使用 <code style="background:var(--bg3);padding:2px 5px;border-radius:3px;">/read</code> 命令让 Claude 先"学习"你的代码风格。</p>
+      </div>
+      <div class="info-card">
+        <h4>💬 用自然语言描述意图，不要描述实现</h4>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">与其说"修改第 42 行的 for 循环"，不如说"让用户列表的加载更快"。Claude Code 在理解意图时表现最好，让它自己决定如何实现。</p>
+      </div>
+      <div class="info-card">
+        <h4>🔄 迭代式工作流</h4>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">不要试图一次性让 Claude Code 完成所有事情。把大任务拆成小步骤，每步验证后再继续。这样既降低出错风险，也让你保持对代码的理解和控制。</p>
+      </div>
+      <div class="info-card">
+        <h4>🧪 让 Claude Code 写测试</h4>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">总是让 Claude Code 同时生成测试用例。这不仅能提高代码质量，更能帮助你理解 Claude 实现的逻辑——测试是最好的文档。</p>
+      </div>
+      <div class="info-card">
+        <h4>📝 用 CLAUDE.md 文件定制行为</h4>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">在项目根目录创建 <code style="background:var(--bg3);padding:2px 5px;border-radius:3px;">CLAUDE.md</code> 文件，写入项目约定、技术栈说明、代码风格要求。Claude Code 每次启动都会读取它，确保行为一致。</p>
+      </div>
+      <div class="info-card">
+        <h4>🤖 让 Claude Code 自我调试</h4>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;">遇到 bug 时，直接把错误信息粘贴给 Claude Code，让它自己定位和修复。大多数情况下，它比你更快找到根本原因——尤其是当你给它运行测试的权限时。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="section" id="summary">
+    <div class="section-label">KEY TAKEAWAYS</div>
+    <div class="section-title">🎯 核心要点总结</div>
+
+    <div class="summary-box">
+      <h3>本期最值得记住的 8 件事</h3>
+      <div class="summary-item">
+        <div class="si-num">1</div>
+        <div><strong style="color:var(--text);">编码已被"解决"</strong>——将想法转化为代码不再是瓶颈。瓶颈已转移到"构建什么"和"为什么构建"，判断力比执行力更有价值。</div>
+      </div>
+      <div class="summary-item">
+        <div class="si-num">2</div>
+        <div><strong style="color:var(--text);">4% 的 GitHub 提交</strong>——Claude Code 已生成全球 4% 的公开代码提交，日活用户上月翻倍，增速持续加速。</div>
+      </div>
+      <div class="summary-item">
+        <div class="si-num">3</div>
+        <div><strong style="color:var(--text);">潜在需求是最强产品信号</strong>——当用户以非预期方式使用你的产品，这就是下一个产品机会的指针。Cowork 就是这样诞生的。</div>
+      </div>
+      <div class="summary-item">
+        <div class="si-num">4</div>
+        <div><strong style="color:var(--text);">给工程师无限 Token</strong>——token 成本远低于工程师时间成本，消除 AI 使用限制是最好的产品研发投资。</div>
+      </div>
+      <div class="summary-item">
+        <div class="si-num">5</div>
+        <div><strong style="color:var(--text);">用产品本身构建产品</strong>——Cowork 和 Claude Code 自身都由 Claude Code 构建。这是最快建立团队产品理解和信任的方式。</div>
+      </div>
+      <div class="summary-item">
+        <div class="si-num">6</div>
+        <div><strong style="color:var(--text);">Cowork：10 天从零上线</strong>——AI 正在把产品开发周期从月缩短到天。这对竞争格局意味着巨大变化。</div>
+      </div>
+      <div class="summary-item">
+        <div class="si-num">7</div>
+        <div><strong style="color:var(--text);">印刷机类比</strong>——AI 不会消灭工程师，而是让更多人能构建软件，并催生全新职业。"软件工程师"可能消失，但"构建者"的需求将爆炸式增长。</div>
+      </div>
+      <div class="summary-item">
+        <div class="si-num">8</div>
+        <div><strong style="color:var(--text);">三层 AI 安全体系</strong>——模型层（训练期价值观）+ 产品层（使用政策）+ 社会层（外部规范），三者缺一不可。</div>
+      </div>
+    </div>
+
+    <div class="source-list">
+      <div style="font-size:11px;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">参考来源</div>
+      <div class="source-item">▶ <a href="https://www.youtube.com/watch?v=We7BZVKbCVw" target="_blank">YouTube · 原视频（1h28m）</a></div>
+      <div class="source-item">📄 <a href="https://www.lennysnewsletter.com/p/head-of-claude-code-what-happens" target="_blank">Lenny's Newsletter · 文字版 + 完整transcript</a></div>
+      <div class="source-item">🔗 <a href="https://x.com/bcherny" target="_blank">Boris Cherny 的 X 账号 @bcherny</a></div>
+      <div class="source-item">🌐 <a href="https://waydev.co/8-game-changing-insights-from-anthropic-claudecode-boris-cherny/" target="_blank">Waydev · 8 Game-Changing Insights 笔记</a></div>
+    </div>
+  </div>
+
+</div><!-- end #main -->
+
+<script>
+// Reading progress bar
+window.addEventListener('scroll', () => {
+  const el = document.getElementById('progress');
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  el.style.width = (scrollTop / docHeight * 100) + '%';
+});
+
+// Chapter accordion
+function toggleChapter(header) {
+  const card = header.parentElement;
+  card.classList.toggle('open');
+}
+
+// Sidebar nav highlight
+const navLinks = document.querySelectorAll('.nav-link');
+const sections = document.querySelectorAll('.section[id]');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 120) cur = s.id; });
+  navLinks.forEach(l => {
+    l.classList.remove('active');
+    if (l.getAttribute('href') === '#' + cur) l.classList.add('active');
+  });
+});
+</script>
+
+</body>
+</html>

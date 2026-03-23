@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Dive into LLMs like ChatGPT · Andrej Karpathy</title>
+<link href="https://fonts.loli.net/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f1a;--bg2:#13162a;--bg3:#1a1f36;--card:#1e2340;
+  --border:rgba(255,255,255,0.07);
+  --p:#7c6af7;--b:#5dbef4;--g:#5cf0b0;--o:#f0a060;--r:#f06090;--y:#f0d060;
+  --yt:#f06060;
+  --text:#e8eaf6;--text2:#9ea3c4;--text3:#6b70a0;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;}
+#progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--yt),var(--p));width:0%;z-index:1000;transition:width .1s;}
+
+/* Sidebar */
+#sidebar{position:fixed;left:0;top:0;bottom:0;width:220px;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;z-index:100;padding:0;}
+.sidebar-back-bar{padding:12px 16px 10px;border-bottom:1px solid var(--border);}
+.sidebar-back{font-size:11px;color:var(--text3);text-decoration:none;display:flex;align-items:center;gap:4px;transition:color .2s;font-weight:600;}
+.sidebar-back:hover{color:var(--p);}
+.nav-group{font-size:10px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;padding:12px 18px 4px;font-weight:700;}
+.nav-group.sep{border-top:1px solid var(--border);margin-top:6px;padding-top:14px;}
+.lib-item{display:flex;align-items:flex-start;gap:9px;padding:7px 16px;text-decoration:none;transition:all .2s;border-left:3px solid transparent;}
+.lib-item:hover{background:rgba(255,255,255,.03);}
+.lib-item.current{background:rgba(240,96,96,.09);border-left-color:var(--yt);}
+.lib-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.lib-dot.dl{background:var(--p);}
+.lib-dot.yt{background:var(--yt);}
+.lib-title{font-size:12px;font-weight:600;color:var(--text2);line-height:1.35;}
+.lib-item.current .lib-title{color:var(--text);}
+.lib-meta{font-size:10.5px;color:var(--text3);margin-top:1px;}
+.nav-link{display:block;padding:7px 16px 7px 20px;font-size:12px;color:var(--text3);text-decoration:none;transition:all .2s;border-left:2px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.nav-link:hover,.nav-link.active{color:var(--text);border-left-color:var(--yt);background:rgba(240,96,96,.05);}
+
+/* Main */
+#main{margin-left:220px;min-height:100vh;}
+
+/* Hero */
+.hero{background:linear-gradient(135deg,#0d0f1a 0%,#1a0a0a 50%,#0a0d1a 100%);padding:22px 40px 20px;border-bottom:1px solid var(--border);position:relative;overflow:hidden;display:flex;align-items:center;gap:40px;flex-wrap:wrap;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 80% at 80% 50%,rgba(240,96,96,0.07),transparent);}
+.hero-left{position:relative;z-index:1;flex:1;min-width:280px;}
+.hero-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;}
+.badge-yt{background:rgba(240,96,96,0.15);color:var(--yt);border:1px solid rgba(240,96,96,0.3);}
+.badge-free{background:rgba(92,240,176,0.12);color:var(--g);border:1px solid rgba(92,240,176,0.25);}
+.badge-level{background:rgba(93,190,244,0.12);color:var(--b);border:1px solid rgba(93,190,244,0.25);}
+.hero-left h1{font-size:22px;font-weight:900;line-height:1.25;margin-bottom:6px;}
+.hero-sub{font-size:13px;color:var(--text2);margin-bottom:12px;}
+.hero-link{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;background:var(--yt);color:white;border-radius:6px;text-decoration:none;font-size:12px;font-weight:700;transition:opacity .2s;}
+.hero-link:hover{opacity:.85;}
+.hero-stats{position:relative;z-index:1;display:flex;gap:28px;flex-wrap:wrap;align-items:center;}
+.hstat{text-align:center;}
+.hstat .n{font-size:24px;font-weight:900;color:var(--yt);line-height:1;}
+.hstat .l{font-size:10px;color:var(--text3);margin-top:2px;letter-spacing:.5px;}
+
+/* Sections */
+.section{padding:40px 48px;border-bottom:1px solid var(--border);}
+.section-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--yt);font-weight:700;margin-bottom:4px;}
+.section-title{font-size:1.4rem;font-weight:700;margin-bottom:20px;}
+
+/* Snap overview */
+.snap-overview{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:28px;}
+.snap-ov-hd{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--yt);font-weight:700;margin-bottom:20px;}
+.ring-row{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;margin-bottom:20px;}
+.ring-stat{display:flex;align-items:center;gap:14px;}
+.ring-track{fill:none;stroke:rgba(255,255,255,.08);stroke-width:8;}
+.ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;}
+.ring-stat-val{font-size:18px;font-weight:900;line-height:1;}
+.ring-stat-name{font-size:12px;font-weight:600;color:var(--text2);margin-top:2px;}
+.ring-stat-sub{font-size:10px;color:var(--text3);}
+.snap-divider{height:1px;background:var(--border);margin:16px 0;}
+.snap-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+@media(max-width:900px){.snap-cols{grid-template-columns:1fr 1fr;}}
+.snap-col-item{font-size:13px;color:var(--text2);}
+.snap-col-item .sci-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+.snap-col-item .sci-val{font-weight:700;color:var(--text);}
+
+/* Stage banner */
+.stage-banner{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;gap:16px;}
+.stage-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex-shrink:0;}
+.stage-num.s1{background:rgba(93,190,244,0.15);color:var(--b);}
+.stage-num.s2{background:rgba(92,240,176,0.15);color:var(--g);}
+.stage-num.s3{background:rgba(240,96,96,0.15);color:var(--yt);}
+.stage-info h3{font-size:15px;font-weight:700;margin-bottom:2px;}
+.stage-info p{font-size:12px;color:var(--text3);}
+
+/* Chapter accordion */
+.chapters-wrap{display:flex;flex-direction:column;gap:10px;margin-bottom:28px;}
+.chapter-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s;}
+.chapter-card:hover{border-color:rgba(240,96,96,0.25);}
+.chapter-header{display:flex;align-items:center;gap:14px;padding:14px 18px;cursor:pointer;}
+.chapter-time{background:rgba(240,96,96,0.12);color:var(--yt);font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;flex-shrink:0;font-family:monospace;}
+.chapter-title{font-weight:600;font-size:14px;flex:1;}
+.chapter-icon{color:var(--text3);font-size:11px;flex-shrink:0;transition:transform .2s;}
+.chapter-body{padding:0 18px 18px;display:none;font-size:14px;color:var(--text2);line-height:1.75;}
+.chapter-card.open .chapter-body{display:block;}
+.chapter-card.open .chapter-icon{transform:rotate(180deg);}
+
+/* Key point */
+.key-point{background:rgba(124,106,247,0.06);border-left:3px solid var(--p);border-radius:0 8px 8px 0;padding:10px 14px;margin:10px 0;font-size:13px;color:var(--text2);}
+.key-point .kp-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--p);margin-bottom:3px;font-weight:700;}
+.key-point.green{background:rgba(92,240,176,0.06);border-left-color:var(--g);}
+.key-point.green .kp-label{color:var(--g);}
+.key-point.red{background:rgba(240,96,96,0.06);border-left-color:var(--yt);}
+.key-point.red .kp-label{color:var(--yt);}
+.key-point.blue{background:rgba(93,190,244,0.06);border-left-color:var(--b);}
+.key-point.blue .kp-label{color:var(--b);}
+
+/* Tags */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:600;margin:3px;}
+.tag.blue{background:rgba(93,190,244,0.12);color:var(--b);}
+.tag.green{background:rgba(92,240,176,0.12);color:var(--g);}
+.tag.red{background:rgba(240,96,96,0.12);color:var(--yt);}
+.tag.purple{background:rgba(124,106,247,0.12);color:var(--p);}
+.tag.yellow{background:rgba(240,208,96,0.12);color:var(--y);}
+
+/* Concept grid */
+.concept-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;}
+@media(max-width:700px){.concept-grid{grid-template-columns:1fr;}}
+.concept-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;}
+.concept-card .cc-term{font-size:12px;font-weight:700;color:var(--b);margin-bottom:4px;}
+.concept-card .cc-def{font-size:12px;color:var(--text3);line-height:1.6;}
+
+/* Quote */
+.quote-block{border-left:3px solid var(--yt);background:rgba(240,96,96,0.05);padding:12px 16px;margin:12px 0;border-radius:0 8px 8px 0;font-style:italic;font-size:13px;color:var(--text);}
+.quote-block .quote-src{font-size:11px;color:var(--text3);margin-top:6px;font-style:normal;}
+
+/* Bench grid */
+.bench-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:12px;}
+.bench-item{background:var(--bg3);border-radius:10px;padding:14px;}
+.bench-name{font-size:11px;color:var(--text3);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;}
+.bench-bar-wrap{display:flex;align-items:center;gap:10px;}
+.bench-bar-track{flex:1;height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;}
+.bench-bar-fill{height:100%;border-radius:4px;}
+.bench-score{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;}
+
+/* Comparison table */
+.compare-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px;}
+.compare-table th{background:var(--bg3);padding:10px 14px;text-align:left;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);}
+.compare-table td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text2);}
+.compare-table tr:last-child td{border-bottom:none;}
+.compare-table .name{font-weight:700;color:var(--text);}
+.compare-table .hl td{background:rgba(240,96,96,0.05);}
+
+/* Timeline */
+.timeline{position:relative;padding-left:28px;margin-top:16px;}
+.timeline::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--b),var(--g),var(--yt));}
+.tl-item{position:relative;margin-bottom:20px;}
+.tl-item::before{content:'';position:absolute;left:-22px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--b);border:2px solid var(--bg);}
+.tl-item.green::before{background:var(--g);}
+.tl-item.red::before{background:var(--yt);}
+.tl-item.purple::before{background:var(--p);}
+.tl-label{font-size:10px;color:var(--text3);margin-bottom:2px;letter-spacing:1px;text-transform:uppercase;}
+.tl-title{font-size:13px;font-weight:700;color:var(--text);}
+.tl-detail{font-size:12px;color:var(--text2);margin-top:3px;line-height:1.6;}
+
+/* Info cards */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+@media(max-width:800px){.info-grid{grid-template-columns:1fr;}}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.info-card h4{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.info-card.full{grid-column:1/-1;}
+
+/* Dual verdict */
+.dual-verdict{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:12px;}
+@media(max-width:700px){.dual-verdict{grid-template-columns:1fr;}}
+.dv-box{background:var(--bg3);border-radius:10px;padding:16px;}
+.dv-label{font-size:10px;letter-spacing:2px;font-weight:700;text-transform:uppercase;margin-bottom:10px;}
+.dv-box.pos .dv-label{color:var(--g);}
+.dv-box.neg .dv-label{color:var(--yt);}
+.dv-item{font-size:13px;color:var(--text2);margin-bottom:6px;padding-left:14px;position:relative;line-height:1.55;}
+.dv-item::before{content:'';position:absolute;left:0;top:7px;width:6px;height:6px;border-radius:50%;}
+.dv-box.pos .dv-item::before{background:var(--g);}
+.dv-box.neg .dv-item::before{background:var(--yt);}
+
+/* Summary box */
+.summary-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-top:24px;}
+.summary-box h3{font-size:15px;font-weight:700;margin-bottom:14px;}
+.summary-item{display:flex;gap:10px;margin-bottom:10px;font-size:13px;color:var(--text2);align-items:flex-start;}
+.si-num{width:20px;height:20px;border-radius:50%;background:rgba(240,96,96,0.15);color:var(--yt);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+
+/* Data callout */
+.data-row{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0;}
+.data-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 14px;display:flex;flex-direction:column;gap:2px;}
+.data-chip .dc-val{font-size:16px;font-weight:900;color:var(--yt);}
+.data-chip .dc-label{font-size:10px;color:var(--text3);letter-spacing:.5px;}
+
+/* Numbered list */
+.num-list{margin:10px 0;}
+.num-item{display:flex;gap:10px;margin-bottom:8px;font-size:13px;color:var(--text2);align-items:flex-start;}
+.ni-num{width:20px;height:20px;border-radius:4px;background:rgba(93,190,244,0.15);color:var(--b);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<aside id="sidebar">
+  <div class="sidebar-back-bar">
+    <a href="index.html" class="sidebar-back">← 返回学习库</a>
+  </div>
+  <nav>
+    <div class="nav-group">🎓 DeepLearning.AI</div>
+    <a href="agent-skills-course.html" class="lib-item">
+      <span class="lib-dot dl"></span>
+      <div><div class="lib-title">Agent Skills with Anthropic</div><div class="lib-meta">Anthropic · 9课时</div></div>
+    </a>
+    <a href="agent-memory-course.html" class="lib-item">
+      <span class="lib-dot dl"></span>
+      <div><div class="lib-title">Agent Memory</div><div class="lib-meta">Oracle · 11课时</div></div>
+    </a>
+    <div class="nav-group">▶ YouTube</div>
+    <a href="lex-fridman-podcast.html" class="lib-item">
+      <span class="lib-dot yt"></span>
+      <div><div class="lib-title">Lex Fridman Podcast</div><div class="lib-meta">2期节目</div></div>
+    </a>
+    <a href="ai-explained.html" class="lib-item">
+      <span class="lib-dot yt"></span>
+      <div><div class="lib-title">AI Explained</div><div class="lib-meta">4期视频</div></div>
+    </a>
+    <a href="karpathy-llm-deep-dive.html" class="lib-item current">
+      <span class="lib-dot yt"></span>
+      <div><div class="lib-title">Karpathy: LLM Deep Dive</div><div class="lib-meta">3h31m · 22章节</div></div>
+    </a>
+    <a href="lenny-boris-claude-code.html" class="lib-item">
+      <span class="lib-dot yt"></span>
+      <div><div class="lib-title">Lenny × Boris Cherny</div><div class="lib-meta">Claude Code · 1h28m</div></div>
+    </a>
+    <div class="nav-group sep">本课导航</div>
+    <a href="#overview" class="nav-link">⚡ 一图速览</a>
+    <a href="#pipeline" class="nav-link">🗺️ 训练全流程</a>
+    <div class="nav-group">三大阶段</div>
+    <a href="#stage1" class="nav-link">① 预训练 Pretraining</a>
+    <a href="#stage2" class="nav-link">② 监督微调 + 心理学</a>
+    <a href="#stage3" class="nav-link">③ 强化学习 RL</a>
+    <a href="#models" class="nav-link">📊 模型对比速查</a>
+    <a href="#glossary" class="nav-link">📖 核心术语表</a>
+    <a href="#summary" class="nav-link">🎯 核心要点</a>
+  </nav>
+</aside>
+
+<div id="main">
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-badges">
+        <span class="badge badge-yt">▶ YouTube</span>
+        <span class="badge badge-free">免费</span>
+        <span class="badge badge-level">面向大众 · 零基础可看</span>
+      </div>
+      <h1>Deep Dive into LLMs like ChatGPT</h1>
+      <p class="hero-sub">Andrej Karpathy（前 OpenAI 联创 · 前 Tesla AI 负责人）· 2025年2月 · 中文深度解读版</p>
+      <a href="https://youtube.com/watch?v=7xTGNNLPyMI" target="_blank" class="hero-link">▶ 观看原视频（3h31m）</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="n">3h31m</div><div class="l">视频时长</div></div>
+      <div class="hstat"><div class="n">22</div><div class="l">章节</div></div>
+      <div class="hstat"><div class="n">3</div><div class="l">核心阶段</div></div>
+      <div class="hstat"><div class="n">15T</div><div class="l">训练 Token 数</div></div>
+    </div>
+  </div>
+
+  <!-- Snap Overview -->
+  <div class="section" id="overview">
+    <div class="section-label">SNAPSHOT</div>
+    <div class="section-title">⚡ 一图速览 · LLM 训练全景</div>
+
+    <div class="snap-overview">
+      <div class="snap-ov-hd">核心规模数据</div>
+      <div class="ring-row">
+        <div class="ring-stat">
+          <svg width="72" height="72" viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="38"/>
+            <circle class="ring-fill" cx="50" cy="50" r="38" stroke="#f06060" stroke-dasharray="200 240"/>
+            <text x="50" y="44" text-anchor="middle" fill="#f06060" font-size="14" font-weight="900" font-family="sans-serif">15T</text>
+            <text x="50" y="60" text-anchor="middle" fill="#9ea3c4" font-size="9" font-family="sans-serif">Tokens</text>
+          </svg>
+          <div>
+            <div class="ring-stat-val" style="color:var(--yt)">15 万亿</div>
+            <div class="ring-stat-name">预训练 Token 数</div>
+            <div class="ring-stat-sub">FineWeb 数据集 · 44TB</div>
+          </div>
+        </div>
+        <div class="ring-stat">
+          <svg width="72" height="72" viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="38"/>
+            <circle class="ring-fill" cx="50" cy="50" r="38" stroke="#5dbef4" stroke-dasharray="180 240"/>
+            <text x="50" y="44" text-anchor="middle" fill="#5dbef4" font-size="14" font-weight="900" font-family="sans-serif">405B</text>
+            <text x="50" y="60" text-anchor="middle" fill="#9ea3c4" font-size="9" font-family="sans-serif">Params</text>
+          </svg>
+          <div>
+            <div class="ring-stat-val" style="color:var(--b)">4050 亿</div>
+            <div class="ring-stat-name">Llama 3.1 参数量</div>
+            <div class="ring-stat-sub">Meta 开源最大模型</div>
+          </div>
+        </div>
+        <div class="ring-stat">
+          <svg width="72" height="72" viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="38"/>
+            <circle class="ring-fill" cx="50" cy="50" r="38" stroke="#5cf0b0" stroke-dasharray="140 240"/>
+            <text x="50" y="44" text-anchor="middle" fill="#5cf0b0" font-size="14" font-weight="900" font-family="sans-serif">100K</text>
+            <text x="50" y="60" text-anchor="middle" fill="#9ea3c4" font-size="9" font-family="sans-serif">词汇表</text>
+          </svg>
+          <div>
+            <div class="ring-stat-val" style="color:var(--g)">10 万个</div>
+            <div class="ring-stat-name">GPT-4 词汇表大小</div>
+            <div class="ring-stat-sub">Llama 3 约 12.8 万</div>
+          </div>
+        </div>
+        <div class="ring-stat">
+          <svg width="72" height="72" viewBox="0 0 100 100">
+            <circle class="ring-track" cx="50" cy="50" r="38"/>
+            <circle class="ring-fill" cx="50" cy="50" r="38" stroke="#7c6af7" stroke-dasharray="100 240"/>
+            <text x="50" y="44" text-anchor="middle" fill="#7c6af7" font-size="14" font-weight="900" font-family="sans-serif">$672</text>
+            <text x="50" y="60" text-anchor="middle" fill="#9ea3c4" font-size="9" font-family="sans-serif">成本</text>
+          </svg>
+          <div>
+            <div class="ring-stat-val" style="color:var(--p)">$672</div>
+            <div class="ring-stat-name">复现 GPT-2 的成本</div>
+            <div class="ring-stat-sub">Karpathy 用 llm.c 实测</div>
+          </div>
+        </div>
+      </div>
+      <div class="snap-divider"></div>
+      <div class="snap-cols">
+        <div class="snap-col-item"><div class="sci-label">视频发布</div><div class="sci-val">2025年2月</div></div>
+        <div class="snap-col-item"><div class="sci-label">GPT-2 参数量</div><div class="sci-val">1.24 亿（124M）</div></div>
+        <div class="snap-col-item"><div class="sci-label">上下文窗口</div><div class="sci-val">128K Token（Llama 3.1）</div></div>
+        <div class="snap-col-item"><div class="sci-label">DeepSeek-R1 训练成本</div><div class="sci-val">约 $600 万（据估算）</div></div>
+        <div class="snap-col-item"><div class="sci-label">FineWeb-Edu 过滤后</div><div class="sci-val">1.3 万亿 Token（教育级）</div></div>
+        <div class="snap-col-item"><div class="sci-label">推荐入门模型</div><div class="sci-val">Llama 3.1 / Ollama 本地跑</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Training Pipeline Overview -->
+  <div class="section" id="pipeline">
+    <div class="section-label">TRAINING PIPELINE</div>
+    <div class="section-title">🗺️ LLM 完整训练流程</div>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:24px;">Karpathy 将整个流程分为三个顺序阶段，每个阶段都在前一个的基础上叠加能力：</p>
+
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-label">阶段 1 · 00:01 — 00:59</div>
+        <div class="tl-title">预训练（Pretraining）</div>
+        <div class="tl-detail">从互联网爬取 15 万亿 Token，训练 Transformer 神经网络预测下一个 Token。产出：Base Model（文档续写器）。<br>代表工具：FineWeb、nanoGPT、llm.c</div>
+      </div>
+      <div class="tl-item green">
+        <div class="tl-label">阶段 2 · 01:01 — 02:07</div>
+        <div class="tl-title">监督微调（SFT）+ LLM 心理学</div>
+        <div class="tl-detail">用人工标注的对话数据微调，让 Base Model 变成对话助手。深入分析幻觉、工具使用、Token 思维、参差智能等特性。<br>产出：Assistant Model（对话助手）</div>
+      </div>
+      <div class="tl-item red">
+        <div class="tl-label">阶段 3 · 02:14 — 03:21</div>
+        <div class="tl-title">强化学习（RL + RLHF）</div>
+        <div class="tl-detail">通过可验证奖励（数学/代码正确性）或人类偏好反馈，让模型超越 SFT 的质量上限，涌现出"慢思考"推理能力。<br>代表案例：DeepSeek-R1、OpenAI o1</div>
+      </div>
+      <div class="tl-item purple">
+        <div class="tl-label">阶段 4 · 03:09 — 03:21</div>
+        <div class="tl-title">展望与实践指南</div>
+        <div class="tl-detail">多模态、长上下文、Agent 化、如何选择和使用 LLM、追踪前沿进展的方法。</div>
+      </div>
+    </div>
+
+    <div class="info-grid" style="margin-top:24px;">
+      <div class="info-card">
+        <h4>🎭 Base Model vs Assistant Model</h4>
+        <table class="compare-table">
+          <tr><th>特性</th><th>Base Model</th><th>Assistant Model</th></tr>
+          <tr><td class="name">本质</td><td>文档续写器</td><td>对话助手</td></tr>
+          <tr><td class="name">行为</td><td>续写给定文本</td><td>回答问题、帮助用户</td></tr>
+          <tr><td class="name">训练来源</td><td>互联网原始文本</td><td>人工标注对话</td></tr>
+          <tr><td class="name">能直接用吗？</td><td>需要精心设计 Prompt</td><td>直接对话即可</td></tr>
+          <tr class="hl"><td class="name">例子</td><td>Llama 3.1 Base</td><td>ChatGPT、Claude</td></tr>
+        </table>
+      </div>
+      <div class="info-card">
+        <h4>📊 各阶段所需数据量对比</h4>
+        <div class="bench-grid">
+          <div class="bench-item">
+            <div class="bench-name">预训练数据</div>
+            <div class="bench-bar-wrap">
+              <div class="bench-bar-track"><div class="bench-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--yt),var(--p));"></div></div>
+              <span class="bench-score">15 万亿 Token</span>
+            </div>
+          </div>
+          <div class="bench-item">
+            <div class="bench-name">SFT 对话数据</div>
+            <div class="bench-bar-wrap">
+              <div class="bench-bar-track"><div class="bench-bar-fill" style="width:8%;background:var(--g);"></div></div>
+              <span class="bench-score">数十万条</span>
+            </div>
+          </div>
+          <div class="bench-item">
+            <div class="bench-name">RLHF 偏好数据</div>
+            <div class="bench-bar-wrap">
+              <div class="bench-bar-track"><div class="bench-bar-fill" style="width:5%;background:var(--b);"></div></div>
+              <span class="bench-score">数万条</span>
+            </div>
+          </div>
+          <div class="bench-item">
+            <div class="bench-name">RL 自我探索（DeepSeek）</div>
+            <div class="bench-bar-wrap">
+              <div class="bench-bar-track"><div class="bench-bar-fill" style="width:60%;background:var(--y);"></div></div>
+              <span class="bench-score">无限（自生成）</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 1: Pretraining -->
+  <div class="section" id="stage1">
+    <div class="section-label">STAGE 1 · 00:00 — 00:59</div>
+    <div class="section-title">预训练 Pretraining</div>
+
+    <div class="stage-banner">
+      <div class="stage-num s1">1</div>
+      <div class="stage-info">
+        <h3>从互联网数据到 Base Model</h3>
+        <p>核心任务：训练神经网络在看到一段 Token 序列后，预测下一个 Token 的概率分布</p>
+      </div>
+    </div>
+
+    <div class="chapters-wrap">
+      <div class="chapter-card open">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">00:01:00</span>
+          <span class="chapter-title">预训练数据：互联网爬取与质量过滤</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>训练数据来源于对互联网的大规模爬取，原始数据中充斥大量垃圾内容，需要严格过滤。</p>
+          <div class="data-row">
+            <div class="data-chip"><div class="dc-val">15T</div><div class="dc-label">FineWeb 总 Token 数</div></div>
+            <div class="data-chip"><div class="dc-val">44 TB</div><div class="dc-label">过滤后数据大小</div></div>
+            <div class="data-chip"><div class="dc-val">1.3T</div><div class="dc-label">FineWeb-Edu 教育级</div></div>
+          </div>
+          <div class="key-point blue">
+            <div class="kp-label">Karpathy 的评价</div>
+            "互联网上的平均网页质量极低，低到让人难以理解之前的 LLM 是怎么学到任何东西的。"——这推动了高质量数据集筛选的重要性。
+          </div>
+          <p style="margin-top:10px;"><strong>主流数据集：</strong></p>
+          <div class="concept-grid">
+            <div class="concept-card"><div class="cc-term">FineWeb / FineWeb-Edu</div><div class="cc-def">HuggingFace 开源，15T token，教育级子集 1.3T，质量显著更高</div></div>
+            <div class="concept-card"><div class="cc-term">The Pile</div><div class="cc-def">EleutherAI 整理，涵盖书籍、GitHub、学术论文等多样来源</div></div>
+            <div class="concept-card"><div class="cc-term">RedPajama</div><div class="cc-def">Together AI 开源的大规模训练数据集</div></div>
+            <div class="concept-card"><div class="cc-term">高质量数据上采样</div><div class="cc-def">书籍、代码、学术论文会被重复训练多次（上采样），提升学习效率</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">00:07:47</span>
+          <span class="chapter-title">Tokenization · 文字如何变成数字</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>模型不直接处理字符，而是将文本切分为 <strong>Token</strong>（词片段）。这个设计决策对模型的很多"怪异行为"有直接影响。</p>
+          <div class="key-point">
+            <div class="kp-label">BPE 算法（Byte Pair Encoding）</div>
+            从单个字节出发，统计最频繁的相邻字节对，反复合并，直到词汇表达到目标大小（如 10 万）。
+          </div>
+          <div class="bench-grid">
+            <div class="bench-item">
+              <div class="bench-name">GPT-4 词汇表</div>
+              <div class="bench-bar-wrap">
+                <div class="bench-bar-track"><div class="bench-bar-fill" style="width:78%;background:var(--yt);"></div></div>
+                <span class="bench-score">~100,000</span>
+              </div>
+            </div>
+            <div class="bench-item">
+              <div class="bench-name">Llama 3 词汇表</div>
+              <div class="bench-bar-wrap">
+                <div class="bench-bar-track"><div class="bench-bar-fill" style="width:100%;background:var(--p);"></div></div>
+                <span class="bench-score">128,000</span>
+              </div>
+            </div>
+            <div class="bench-item">
+              <div class="bench-name">GPT-2 词汇表</div>
+              <div class="bench-bar-wrap">
+                <div class="bench-bar-track"><div class="bench-bar-fill" style="width:39%;background:var(--b);"></div></div>
+                <span class="bench-score">50,257</span>
+              </div>
+            </div>
+            <div class="bench-item">
+              <div class="bench-name">中文字符（每字约）</div>
+              <div class="bench-bar-wrap">
+                <div class="bench-bar-track"><div class="bench-bar-fill" style="width:10%;background:var(--g);"></div></div>
+                <span class="bench-score">1 Token</span>
+              </div>
+            </div>
+          </div>
+          <div class="key-point red">
+            <div class="kp-label">⚠️ Tokenization 是很多 Bug 的根源</div>
+            "strawberry 里有几个 r？" → 早期模型答 2 个（因为切成 ["straw", "berry"]，看不到单个字母）<br>
+            数字计算不稳定 → "1000" 和 "1,000" 是不同 Token<br>
+            字符串反转出错 → Token 化后字母顺序信息已丢失
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">00:14:27</span>
+          <span class="chapter-title">神经网络 I/O · Transformer 的输入与输出</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Transformer 的核心任务极其简单：<strong>给定一个 Token 序列，输出下一个 Token 的概率分布。</strong></p>
+          <div class="concept-grid">
+            <div class="concept-card"><div class="cc-term">输入</div><div class="cc-def">Token ID 序列，最多 Context Length 个（Llama 3.1 支持 128K Token）</div></div>
+            <div class="concept-card"><div class="cc-term">输出</div><div class="cc-def">词汇表上每个 Token 的概率（softmax 归一化），采样得到下一个</div></div>
+            <div class="concept-card"><div class="cc-term">训练目标</div><div class="cc-def">交叉熵损失——预测的概率分布要尽量接近真实答案（即下一个 Token）</div></div>
+            <div class="concept-card"><div class="cc-term">参数更新</div><div class="cc-def">反向传播 + Adam 优化器，重复万亿次，逐步调整数十亿个参数</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">00:20:11</span>
+          <span class="chapter-title">神经网络内部 · Transformer 结构解析</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Karpathy 用直观类比解释 Transformer 的关键组件，不涉及具体数学公式。</p>
+          <div class="concept-grid">
+            <div class="concept-card"><div class="cc-term">🔍 Self-Attention 注意力机制</div><div class="cc-def">让每个 Token 能"查看"上下文中所有其他 Token，动态决定哪些信息最重要。是 Transformer 最核心的创新。</div></div>
+            <div class="concept-card"><div class="cc-term">🗄️ MLP 前馈层</div><div class="cc-def">Karpathy 比喻为"知识存储器"——模型学到的大量事实被编码在 MLP 权重里，类似一个压缩的知识数据库。</div></div>
+            <div class="concept-card"><div class="cc-term">📐 Layer Normalization</div><div class="cc-def">归一化每层激活值，防止训练过程中数值爆炸或消失，是让深层网络稳定训练的关键技巧。</div></div>
+            <div class="concept-card"><div class="cc-term">➕ 残差连接</div><div class="cc-def">每个模块的输出 = 输入 + 模块处理结果。让梯度能直接流到早期层，解锁了超过 100 层的深度网络。</div></div>
+          </div>
+          <div class="key-point">
+            <div class="kp-label">Karpathy 的形象比喻</div>
+            整个 Transformer 就像一个"流水线工厂"：原材料（Token）在每一层被加工，最终产出"下一个词是什么"的判断。每一层都负责提取更抽象的特征。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">00:26:01</span>
+          <span class="chapter-title">Inference · 推理时的 Temperature 与采样</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>推理时模型每次只生成一个 Token，再将其拼入上下文，继续预测——这叫<strong>自回归生成</strong>。</p>
+          <table class="compare-table">
+            <tr><th>Temperature</th><th>行为特点</th><th>适用场景</th></tr>
+            <tr><td class="name">= 0</td><td>每次选最高概率 Token（贪心）</td><td>代码生成、需要确定性输出</td></tr>
+            <tr class="hl"><td class="name">= 1</td><td>按原始概率采样</td><td>大多数对话场景</td></tr>
+            <tr><td class="name">0.1–0.7</td><td>偏保守，输出更稳定</td><td>摘要、问答</td></tr>
+            <tr><td class="name">&gt; 1</td><td>更随机，有时无意义</td><td>创意写作（需谨慎）</td></tr>
+          </table>
+          <div class="key-point green">
+            <div class="kp-label">Top-P / Top-K 采样</div>
+            Top-P（nucleus sampling）：只在累积概率达到 P 的最小词集中采样——比单独用 Temperature 更稳定。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">00:31:09</span>
+          <span class="chapter-title">GPT-2 实操演示 · $672 复现整个训练过程</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Karpathy 用自己开发的 <strong>nanoGPT / llm.c</strong> 现场演示从零训练 GPT-2。</p>
+          <div class="data-row">
+            <div class="data-chip"><div class="dc-val">124M</div><div class="dc-label">GPT-2 参数量</div></div>
+            <div class="data-chip"><div class="dc-val">$672</div><div class="dc-label">Karpathy 复现成本</div></div>
+            <div class="data-chip"><div class="dc-val">~$40K</div><div class="dc-label">2019年原始训练成本</div></div>
+            <div class="data-chip"><div class="dc-val">~$100</div><div class="dc-label">极致优化后估算</div></div>
+          </div>
+          <div class="key-point red">
+            <div class="kp-label">⚠️ Base Model 的本质</div>
+            训练完的 Base Model 不是"助手"，是"文档续写器"。给它 "问题：2+2=？\n答案：" 它会续写，但只是因为训练数据里有类似格式——不是真的在"思考"。
+          </div>
+          <div class="quote-block">
+            如果你给 Base Model 一道数学题，它有时会给出答案，有时会生成更多题目变体——因为它认为自己在续写一份"数学练习题文档"。
+            <div class="quote-src">— Karpathy 演示 Llama 3.1 Base Model 时</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">00:42:52</span>
+          <span class="chapter-title">Llama 3.1 Base Model 推理演示 · 理解模型的"心智"</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>用 Meta 的 Llama 3.1（405B 参数）Base Model 做实时推理演示，展示 Base Model 的真实行为模式。</p>
+          <div class="dual-verdict">
+            <div class="dv-box pos">
+              <div class="dv-label">✅ Base Model 擅长的事</div>
+              <div class="dv-item">续写符合上下文风格的文本</div>
+              <div class="dv-item">角色扮演（给定充分上下文）</div>
+              <div class="dv-item">Few-shot 示例后表现显著提升</div>
+              <div class="dv-item">生成多种格式的文档内容</div>
+            </div>
+            <div class="dv-box neg">
+              <div class="dv-label">❌ Base Model 不擅长的事</div>
+              <div class="dv-item">直接回答问题（会续写问题）</div>
+              <div class="dv-item">拒绝有害请求</div>
+              <div class="dv-item">保持一致的"助手"人格</div>
+              <div class="dv-item">主动追问不清晰的用户意图</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 2: SFT + LLM Psychology -->
+  <div class="section" id="stage2">
+    <div class="section-label">STAGE 2 · 01:01 — 02:07</div>
+    <div class="section-title">监督微调 + LLM 心理学</div>
+
+    <div class="stage-banner">
+      <div class="stage-num s2">2</div>
+      <div class="stage-info">
+        <h3>让模型学会"做助手" + 理解其认知模式</h3>
+        <p>用人工标注对话微调 Base Model，并深度剖析幻觉、工具使用、Token 思维、自我认知等特性</p>
+      </div>
+    </div>
+
+    <div class="chapters-wrap">
+      <div class="chapter-card open">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">01:01:06</span>
+          <span class="chapter-title">SFT 对话数据构造 · 如何"培训"一个助手</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>SFT 的核心是高质量的人工标注对话。但"数量少、质量高"是关键——数十万条精心标注的对话，足以大幅改变模型的行为方式。</p>
+          <div class="num-list">
+            <div class="num-item"><div class="ni-num">1</div><div>OpenAI 等公司雇佣专业标注员，按照详细指南撰写理想的"用户-助手"对话</div></div>
+            <div class="num-item"><div class="ni-num">2</div><div>标注覆盖编程辅助、写作润色、知识问答、创意生成、安全拒绝等各类场景</div></div>
+            <div class="num-item"><div class="ni-num">3</div><div>标注指南明确规定：何时说"我不知道"、如何表达不确定性、如何拒绝有害请求</div></div>
+            <div class="num-item"><div class="ni-num">4</div><div>现代方法：用 LLM 辅助生成标注数据（Constitutional AI、Self-Instruct 等），降低人工成本</div></div>
+          </div>
+          <div class="key-point">
+            <div class="kp-label">Karpathy 的比喻</div>
+            预训练 = 读遍了整个互联网，有知识但没礼仪<br>
+            SFT = 接受了"如何做一个好助手"的岗前培训
+          </div>
+          <div class="key-point red">
+            <div class="kp-label">⚠️ SFT 数据质量 Bug：幻觉的来源</div>
+            SFT 数据集通常只包含"给出正确答案"的示范，几乎没有"我不知道"的例子——这导致模型学会了"无论如何都要给出一个听起来合理的答案"。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">01:20:32</span>
+          <span class="chapter-title">幻觉 · 工具使用 · 知识与工作记忆</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>这一节是 Karpathy 最受欢迎的部分，从底层原理解释了 LLM 三个最重要的特性。</p>
+
+          <p style="font-weight:700;margin:14px 0 6px;font-size:15px;">① 幻觉（Hallucination）</p>
+          <p>幻觉是结构性问题，不是 Bug。模型的优化目标是"生成听起来合理的续写"，不是"检索并输出真实事实"。</p>
+          <div class="dual-verdict">
+            <div class="dv-box pos">
+              <div class="dv-label">✅ 缓解幻觉的方法</div>
+              <div class="dv-item">Prompt 中明确写"不确定时说不知道"</div>
+              <div class="dv-item">RAG：提供真实文档作为上下文</div>
+              <div class="dv-item">让模型引用来源，便于人工验证</div>
+              <div class="dv-item">用工具（搜索/计算器）验证输出</div>
+            </div>
+            <div class="dv-box neg">
+              <div class="dv-label">❌ 没用的方法</div>
+              <div class="dv-item">反复要求"确保准确"（模型仍会编造）</div>
+              <div class="dv-item">相信模型说"我已核实" </div>
+              <div class="dv-item">用置信度分数判断（不可靠）</div>
+            </div>
+          </div>
+
+          <p style="font-weight:700;margin:14px 0 6px;font-size:15px;">② 工具使用（Tool Use）</p>
+          <p>现代 LLM 可以在推理时输出"函数调用"格式的 Token，由外部系统执行并将结果返回。</p>
+          <div class="concept-grid">
+            <div class="concept-card"><div class="cc-term">网络搜索</div><div class="cc-def">实时获取模型知识截止日期之后的信息，解决"训练数据过时"问题</div></div>
+            <div class="concept-card"><div class="cc-term">代码执行器</div><div class="cc-def">将数学计算、字符串操作外包给 Python 解释器，彻底解决 Tokenization 导致的计算不稳定</div></div>
+            <div class="concept-card"><div class="cc-term">API 调用</div><div class="cc-def">让 LLM 控制外部服务（发邮件、查数据库、操作文件），实现 Agent 化</div></div>
+            <div class="concept-card"><div class="cc-term">MCP / Function Calling</div><div class="cc-def">标准化的工具调用协议，让 LLM 与任意外部工具集成</div></div>
+          </div>
+
+          <p style="font-weight:700;margin:14px 0 6px;font-size:15px;">③ 知识 vs 工作记忆</p>
+          <table class="compare-table">
+            <tr><th>类型</th><th>存储位置</th><th>特点</th><th>限制</th></tr>
+            <tr><td class="name">长期知识</td><td>模型权重（参数）</td><td>训练时固化，推理时不变</td><td>有知识截止日期</td></tr>
+            <tr class="hl"><td class="name">工作记忆</td><td>Context Window</td><td>可随时更新，放入任何内容</td><td>有长度上限（如 128K）</td></tr>
+            <tr><td class="name">外部记忆</td><td>数据库 + RAG</td><td>可无限扩展</td><td>需要检索机制</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">01:41:46</span>
+          <span class="chapter-title">模型的自我认知 · 它真的知道自己是 AI 吗</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>模型"知道"自己叫 ChatGPT、知道自己是 AI，这些"认知"完全来自 SFT 标注——标注员写了"你是 ChatGPT，你是 AI"的对话，模型就学会了这么回答。</p>
+          <div class="quote-block">
+            模型没有真正的自我意识。它只是在被问到"你是谁"时，输出训练时标注者写的那段文字。这是模仿，不是自知。
+            <div class="quote-src">— Karpathy</div>
+          </div>
+          <div class="key-point red">
+            <div class="kp-label">⚠️ 实际影响</div>
+            这也解释了为什么：<br>
+            • 模型有时声称自己没有训练截止日期（标注没有统一规定）<br>
+            • 不同版本的同一模型"自述"差异很大<br>
+            • 模型可能"否认"自己能做到某事（即使技术上可以）
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">01:46:56</span>
+          <span class="chapter-title">模型需要 Token 来思考 · Chain of Thought 的原理</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>这是 Karpathy 这期视频最重要的实践洞见：<strong>LLM 的"思考"是通过生成 Token 来实现的。</strong>每一个中间步骤的 Token 都是一次思维计算单元。</p>
+          <div class="info-grid">
+            <div class="info-card">
+              <h4>✅ 好的做法</h4>
+              <div class="num-list">
+                <div class="num-item"><div class="ni-num">1</div><div>"一步步分析这个问题，先列出已知条件…"</div></div>
+                <div class="num-item"><div class="ni-num">2</div><div>"先写出你的推理过程，再给出最终答案"</div></div>
+                <div class="num-item"><div class="ni-num">3</div><div>允许模型生成较长的回复（给它思考空间）</div></div>
+                <div class="num-item"><div class="ni-num">4</div><div>用 &lt;thinking&gt; 标签让模型显式推理</div></div>
+              </div>
+            </div>
+            <div class="info-card">
+              <h4>❌ 坏的做法</h4>
+              <div class="num-list">
+                <div class="num-item"><div class="ni-num">!</div><div>"用一个词回答" ← 剥夺了思考空间</div></div>
+                <div class="num-item"><div class="ni-num">!</div><div>"直接给我答案，不要解释" ← 准确率下降</div></div>
+                <div class="num-item"><div class="ni-num">!</div><div>设置极短的 max_tokens ← 截断推理过程</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="key-point green">
+            <div class="kp-label">o1 / DeepSeek-R1 的本质</div>
+            这些"推理模型"的核心，就是被训练成在给出最终答案前，自动生成大量内部思考 Token（&lt;thinking&gt;...&lt;/thinking&gt;）。本质上是把"给模型更多思考空间"系统化了。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">02:01:11</span>
+          <span class="chapter-title">Tokenization 再探 · Strawberry 问题的真相</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>"strawberry 里有几个 r？"是检验 LLM Tokenization 局限性的经典例题。早期 GPT-4 等模型常答错（答 2 个），原因是：</p>
+          <div class="key-point blue">
+            <div class="kp-label">根本原因</div>
+            "strawberry" 被 BPE 切成 ["straw", "berry"]。模型看到的是两个 Token，而不是 10 个字母。它无法直接访问单个字符，就像你蒙着眼睛数被装进袋子里的糖果。
+          </div>
+          <div class="concept-grid">
+            <div class="concept-card"><div class="cc-term">受影响的任务</div><div class="cc-def">字符计数、字符串反转、回文检测、逐字母拼写</div></div>
+            <div class="concept-card"><div class="cc-term">解决方案</div><div class="cc-def">用代码工具处理（Python 的 s.count('r') 永远对）；现代模型通过大量代码训练已部分改善</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">02:04:53</span>
+          <span class="chapter-title">参差不齐的智能 · 为什么 AI 既天才又弱智</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>LLM 的能力分布极不均匀，完全不符合人类的"智力光谱"概念。</p>
+          <div class="bench-grid">
+            <div class="bench-item">
+              <div class="bench-name">博士级物理题</div>
+              <div class="bench-bar-wrap">
+                <div class="bench-bar-track"><div class="bench-bar-fill" style="width:90%;background:var(--g);"></div></div>
+                <span class="bench-score">超越人类</span>
+              </div>
+            </div>
+            <div class="bench-item">
+              <div class="bench-name">法律/医学专业考试</div>
+              <div class="bench-bar-wrap">
+                <div class="bench-bar-track"><div class="bench-bar-fill" style="width:85%;background:var(--g);"></div></div>
+                <span class="bench-score">接近专家</span>
+              </div>
+            </div>
+            <div class="bench-item">
+              <div class="bench-name">数数 strawberry 的 r</div>
+              <div class="bench-bar-wrap">
+                <div class="bench-bar-track"><div class="bench-bar-fill" style="width:30%;background:var(--yt);"></div></div>
+                <span class="bench-score">不如5岁小孩</span>
+              </div>
+            </div>
+            <div class="bench-item">
+              <div class="bench-name">简单加减法（无工具）</div>
+              <div class="bench-bar-wrap">
+                <div class="bench-bar-track"><div class="bench-bar-fill" style="width:45%;background:var(--o);"></div></div>
+                <span class="bench-score">偶尔出错</span>
+              </div>
+            </div>
+          </div>
+          <div class="key-point">
+            <div class="kp-label">Karpathy 的核心建议</div>
+            把 LLM 当作一种<strong>全新的认知实体</strong>，不要用"它有多聪明"来衡量。要问的是："这个具体任务，它能做到什么程度？"——永远用实验代替假设。
+          </div>
+          <div class="quote-block">
+            LLM 不是更聪明的人，也不是更笨的人。它是一种全新的东西，有着完全不同的能力分布图。
+            <div class="quote-src">— Karpathy</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 3: Reinforcement Learning -->
+  <div class="section" id="stage3">
+    <div class="section-label">STAGE 3 · 02:14 — 03:21</div>
+    <div class="section-title">强化学习 Reinforcement Learning</div>
+
+    <div class="stage-banner">
+      <div class="stage-num s3">3</div>
+      <div class="stage-info">
+        <h3>让模型通过试错超越人类标注的上限</h3>
+        <p>RLHF · DeepSeek-R1 · AlphaGo 类比——强化学习如何解锁"慢思考"推理能力</p>
+      </div>
+    </div>
+
+    <div class="chapters-wrap">
+      <div class="chapter-card open">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">02:14:42</span>
+          <span class="chapter-title">RL 基础 · 为什么 SFT 有上限</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>SFT 的本质是"模仿学习"——模型学习复制标注员给的答案，质量上限取决于标注员的水平。强化学习则让模型通过<strong>自己尝试 → 获得反馈 → 调整策略</strong>来学习。</p>
+          <div class="dual-verdict">
+            <div class="dv-box pos">
+              <div class="dv-label">✅ RL 的优势</div>
+              <div class="dv-item">可以在有明确对错的任务上突破人类标注上限</div>
+              <div class="dv-item">模型可以发现人类从未想到的解题策略</div>
+              <div class="dv-item">自我探索产生的"思维链"质量更高</div>
+              <div class="dv-item">在数学/代码等可验证领域效果显著</div>
+            </div>
+            <div class="dv-box neg">
+              <div class="dv-label">⚠️ RL 的限制</div>
+              <div class="dv-item">需要可验证的奖励信号（有明确对错）</div>
+              <div class="dv-item">主观创意写作难以定义奖励函数</div>
+              <div class="dv-item">训练不稳定，可能出现奖励作弊</div>
+              <div class="dv-item">计算成本比 SFT 高得多</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">02:27:47</span>
+          <span class="chapter-title">DeepSeek-R1 · RL 让推理能力自发涌现</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>DeepSeek-R1 是 2025 年初最令业界震惊的成果：仅用强化学习（无需人工标注思维链），模型从零开始自发涌现出了长链式推理能力。</p>
+          <div class="data-row">
+            <div class="data-chip"><div class="dc-val">~$6M</div><div class="dc-label">DeepSeek-R1 训练成本估算</div></div>
+            <div class="data-chip"><div class="dc-val">2025.01</div><div class="dc-label">发布时间</div></div>
+            <div class="data-chip"><div class="dc-val">开源</div><div class="dc-label">权重公开可下载</div></div>
+          </div>
+          <div class="concept-grid">
+            <div class="concept-card"><div class="cc-term">🌟 自发涌现</div><div class="cc-def">模型在 RL 训练中自己"学会"先想再答，完全没有人类示范推理过程——这违反了此前的主流认知</div></div>
+            <div class="concept-card"><div class="cc-term">💡 "Aha Moment"</div><div class="cc-def">训练过程中观察到模型自发出现"等等，我重新想想…"的行为——这是推理能力涌现的标志</div></div>
+            <div class="concept-card"><div class="cc-term">📈 响应变长 = 更准</div><div class="cc-def">RL 训练过程中，正确回答的平均 Token 数持续增长——模型学会了用更多思考换取更高准确率</div></div>
+            <div class="concept-card"><div class="cc-term">🔓 开源冲击</div><div class="cc-def">DeepSeek-R1 开源证明：强大的推理能力不需要 OpenAI 那样的超大规模投入，方法本身才是关键</div></div>
+          </div>
+          <div class="key-point green">
+            <div class="kp-label">与 OpenAI o1 的对比</div>
+            DeepSeek-R1-Zero 直接从 Base Model 用 RL 训练（跳过 SFT），而 o1 用了 SFT 热启动 + RL 精调。两者都证明了 RL 在推理上的巨大潜力，但 DeepSeek 的成本更低、完全开源。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">02:42:07</span>
+          <span class="chapter-title">AlphaGo 类比 · RL 如何超越人类所有知识</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>Karpathy 用 AlphaGo 的故事解释为什么 RL 是 AI 突破人类天花板的关键路径。</p>
+          <div class="timeline">
+            <div class="tl-item">
+              <div class="tl-label">阶段 1</div>
+              <div class="tl-title">AlphaGo 模仿人类棋谱（SFT 类比）</div>
+              <div class="tl-detail">从数万盘人类职业棋手对局中学习，达到业余高手水平——但有人类知识的上限</div>
+            </div>
+            <div class="tl-item green">
+              <div class="tl-label">阶段 2</div>
+              <div class="tl-title">AlphaGo 自我对弈（RL 类比）</div>
+              <div class="tl-detail">与自己对弈数百万局，发现人类职业棋手从未下过的妙手（如"第 37 手"），彻底超越人类</div>
+            </div>
+            <div class="tl-item red">
+              <div class="tl-label">LLM 的类比</div>
+              <div class="tl-title">在数学/代码上，RL 让 LLM 发现了人类标注员从未写过的推理路径</div>
+              <div class="tl-detail">这是 LLM 第一次真正意义上"超越训练数据质量上限"——不再受人类标注能力制约</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">02:48:26</span>
+          <span class="chapter-title">RLHF · 用人类偏好训练助手行为</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <p>对于没有客观对错的任务（如"哪个回答更有帮助"），用人类偏好作为奖励信号。</p>
+          <div class="concept-grid">
+            <div class="concept-card"><div class="cc-term">① 收集偏好数据</div><div class="cc-def">对同一问题生成多个回答，让标注员比较哪个更好，收集数万条偏好对</div></div>
+            <div class="concept-card"><div class="cc-term">② 训练 Reward Model</div><div class="cc-def">用偏好数据训练一个独立模型，让它能自动给 LLM 输出打分（模仿人类判断）</div></div>
+            <div class="concept-card"><div class="cc-term">③ PPO 优化</div><div class="cc-def">用 Reward Model 的分数作为奖励，用 PPO 算法优化 LLM，但限制与原始模型的偏离程度</div></div>
+            <div class="concept-card"><div class="cc-term">④ 反复迭代</div><div class="cc-def">优化后的模型再产生新数据，人类再标注偏好，循环进行（RLHF 是持续过程）</div></div>
+          </div>
+          <div class="key-point red">
+            <div class="kp-label">⚠️ RLHF 的根本局限</div>
+            Karpathy 强调：RLHF 是对人类偏好的"有损模拟"，不等于真正对齐人类价值观。Reward Model 可能被模型"作弊"（生成讨好评分模型的输出，而不是真正有帮助的输出）。
+          </div>
+          <div class="key-point">
+            <div class="kp-label">Constitutional AI（Anthropic）</div>
+            Anthropic 的方法：用 AI 自己根据"原则"（Constitution）生成偏好对，减少对人工标注的依赖，并使价值观更透明可审查。
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-card">
+        <div class="chapter-header" onclick="toggleChapter(this)">
+          <span class="chapter-time">03:09:39</span>
+          <span class="chapter-title">未来展望 · 接下来 LLM 会变成什么样</span>
+          <span class="chapter-icon">▼</span>
+        </div>
+        <div class="chapter-body">
+          <div class="concept-grid">
+            <div class="concept-card"><div class="cc-term">🎥 多模态</div><div class="cc-def">图像、音频、视频原生输入——不再只是文字，感知世界的方式越来越像人类</div></div>
+            <div class="concept-card"><div class="cc-term">📚 超长上下文</div><div class="cc-def">从 128K 到百万 Token，整本书、整个代码库、完整会议记录都可以一次性处理</div></div>
+            <div class="concept-card"><div class="cc-term">🤖 Agent 化</div><div class="cc-def">LLM 作为"操作员"，自主完成多步骤任务：研究→分析→写作→发布，全自动流水线</div></div>
+            <div class="concept-card"><div class="cc-term">🧠 个性化记忆</div><div class="cc-def">跨会话保存用户偏好和上下文，真正的个人助理——不再每次都从零开始</div></div>
+            <div class="concept-card"><div class="cc-term">🏆 更强 RL</div><div class="cc-def">Self-Play 扩展到更多领域，训练数据的质量瓶颈被彻底打破</div></div>
+            <div class="concept-card"><div class="cc-term">🔬 科学发现</div><div class="cc-def">AlphaFold / AlphaProof 预示 AI 在数学和科学上可能自主发现新知识</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Models Quick Reference -->
+  <div class="section" id="models">
+    <div class="section-label">QUICK REFERENCE</div>
+    <div class="section-title">📊 视频中提到的关键模型速查</div>
+    <table class="compare-table">
+      <tr><th>模型</th><th>组织</th><th>参数量</th><th>训练 Token</th><th>特点</th></tr>
+      <tr><td class="name">GPT-2</td><td>OpenAI</td><td>124M–1.5B</td><td>~100B</td><td>Karpathy 现场复现的历史性模型</td></tr>
+      <tr class="hl"><td class="name">Llama 3.1</td><td>Meta</td><td>8B/70B/405B</td><td>15T</td><td>视频中主要演示模型，开源</td></tr>
+      <tr><td class="name">GPT-4</td><td>OpenAI</td><td>未公开（估计~1T MoE）</td><td>未公开</td><td>词汇表 ~100K，闭源</td></tr>
+      <tr class="hl"><td class="name">DeepSeek-R1</td><td>DeepSeek</td><td>671B MoE</td><td>未公开</td><td>RL 直接涌现推理能力，开源，~$6M</td></tr>
+      <tr><td class="name">Claude 3.5 Sonnet</td><td>Anthropic</td><td>未公开</td><td>未公开</td><td>Constitutional AI，重视安全对齐</td></tr>
+      <tr><td class="name">AlphaGo Zero</td><td>DeepMind</td><td>N/A</td><td>N/A</td><td>RL 类比：自我对弈超越人类所有棋谱</td></tr>
+    </table>
+  </div>
+
+  <!-- Glossary -->
+  <div class="section" id="glossary">
+    <div class="section-label">GLOSSARY</div>
+    <div class="section-title">📖 核心术语表</div>
+    <div class="concept-grid">
+      <div class="concept-card"><div class="cc-term">Token</div><div class="cc-def">LLM 处理文本的基本单位，由 BPE 算法将文字切分而成。约 1 Token ≈ 0.75 个英文单词；中文每字通常为 1 Token。</div></div>
+      <div class="concept-card"><div class="cc-term">Tokenization（BPE）</div><div class="cc-def">将文本转化为 Token ID 序列的过程。GPT-4 词汇表约 10 万，Llama 3 约 12.8 万。Tokenization 是多种 LLM Bug 的根源。</div></div>
+      <div class="concept-card"><div class="cc-term">Transformer</div><div class="cc-def">主流 LLM 的神经网络架构，核心是 Self-Attention 机制。允许每个 Token 与上下文中所有 Token 交互，提取相关信息。</div></div>
+      <div class="concept-card"><div class="cc-term">Self-Attention</div><div class="cc-def">让每个 Token 动态查询上下文中其他 Token 的相关性，并加权聚合信息。是 Transformer 最核心的创新，解决了 RNN 的长距离依赖问题。</div></div>
+      <div class="concept-card"><div class="cc-term">Context Window</div><div class="cc-def">模型一次能处理的最大 Token 数，是模型的"工作记忆"。超出此范围的内容会被截断。Llama 3.1 支持 128K Token。</div></div>
+      <div class="concept-card"><div class="cc-term">Base Model</div><div class="cc-def">只经过预训练的模型，本质是"文档续写器"。没有助手人格，需要精心设计 Prompt 才能用于对话。Llama 3.1 Base 是典型例子。</div></div>
+      <div class="concept-card"><div class="cc-term">SFT（监督微调）</div><div class="cc-def">用人工标注的高质量对话数据微调 Base Model，赋予其"助手人格"。数量不需要多，质量决定一切。</div></div>
+      <div class="concept-card"><div class="cc-term">Hallucination（幻觉）</div><div class="cc-def">模型以高置信度输出错误信息。根源在于 SFT 数据缺乏"我不知道"示例，模型学会了"总是给出一个答案"。</div></div>
+      <div class="concept-card"><div class="cc-term">RLHF</div><div class="cc-def">强化学习来自人类反馈。先收集人类偏好数据训练 Reward Model，再用 PPO 优化 LLM 行为，使输出更符合人类期望。</div></div>
+      <div class="concept-card"><div class="cc-term">Reward Model</div><div class="cc-def">RLHF 的核心组件：一个被训练成能预测"人类会更喜欢哪个回答"的独立模型，为 RL 训练提供自动化奖励信号。</div></div>
+      <div class="concept-card"><div class="cc-term">PPO（近端策略优化）</div><div class="cc-def">LLM RL 训练的主流算法。关键特性：限制每次更新时策略偏离的幅度（clipped loss），防止训练崩溃。</div></div>
+      <div class="concept-card"><div class="cc-term">Chain of Thought（思维链）</div><div class="cc-def">让模型在给出最终答案前生成中间推理步骤。利用了"模型需要 Token 来思考"的原理，显著提升复杂任务准确率。</div></div>
+      <div class="concept-card"><div class="cc-term">Temperature</div><div class="cc-def">控制生成随机性的参数。=0 时贪心取最高概率（确定性）；=1 时按原始概率采样；>1 时更随机。大多数场景推荐 0.7–1.0。</div></div>
+      <div class="concept-card"><div class="cc-term">Jagged Intelligence（参差智能）</div><div class="cc-def">Karpathy 造词，描述 LLM 能力极度不均匀：博士级物理 vs 数不清字母。提醒我们不要用人类智力框架衡量 LLM。</div></div>
+      <div class="concept-card"><div class="cc-term">RAG（检索增强生成）</div><div class="cc-def">将外部知识库检索结果注入 Context Window，缓解幻觉并提供最新信息，是企业落地 LLM 的主流方案。</div></div>
+      <div class="concept-card"><div class="cc-term">Constitutional AI</div><div class="cc-def">Anthropic 提出的对齐方法：让 AI 根据明文"原则"（Constitution）自我评估和修改输出，减少对人工标注的依赖。</div></div>
+    </div>
+  </div>
+
+  <!-- Core Summary -->
+  <div class="section" id="summary">
+    <div class="section-label">CORE TAKEAWAYS</div>
+    <div class="section-title">🎯 看完这期视频，你应该记住这 10 件事</div>
+    <div class="summary-box">
+      <h3>Andrej Karpathy 给所有人的 LLM 精华总结</h3>
+      <div class="summary-item"><div class="si-num">1</div><div><strong>LLM 本质是概率续写机器：</strong>在万亿 Token 上训练的"下一个 Token 预测器"，经过 SFT 才有助手人格</div></div>
+      <div class="summary-item"><div class="si-num">2</div><div><strong>Tokenization 是很多 Bug 的根源：</strong>字符计数、拼写、数字计算不稳定，本质都是 Token 化造成的，用代码工具解决</div></div>
+      <div class="summary-item"><div class="si-num">3</div><div><strong>Base Model ≠ 助手：</strong>它是"文档续写器"，SFT 才把它变成"对话助手"——这是质变，不是量变</div></div>
+      <div class="summary-item"><div class="si-num">4</div><div><strong>幻觉是结构性问题：</strong>SFT 数据缺乏"不知道"示例导致，靠 RAG + 工具调用缓解，无法靠"请确保准确"消除</div></div>
+      <div class="summary-item"><div class="si-num">5</div><div><strong>给模型更多 Token 来思考：</strong>Chain of Thought、允许长回复、&lt;thinking&gt; 标签——Token 是模型的思考空间，别剥夺它</div></div>
+      <div class="summary-item"><div class="si-num">6</div><div><strong>LLM 的智能是参差不齐的：</strong>博士级物理 + 数不清字母，用实验而非假设来判断它能做什么</div></div>
+      <div class="summary-item"><div class="si-num">7</div><div><strong>RL 让模型超越训练数据的质量上限：</strong>在可验证任务上，模型能自发发现人类从未想到的推理路径（DeepSeek-R1 为证）</div></div>
+      <div class="summary-item"><div class="si-num">8</div><div><strong>RLHF 是对人类偏好的"有损模拟"：</strong>不等于真正对齐，Reward Model 可能被作弊，需要持续迭代和人工监督</div></div>
+      <div class="summary-item"><div class="si-num">9</div><div><strong>GPT-2 现在只需 $672 就能复现：</strong>AI 的门槛已大幅降低，开源生态（Llama、Ollama）让任何人都能本地运行强大模型</div></div>
+      <div class="summary-item"><div class="si-num">10</div><div><strong>LLM 是一种全新的计算实体：</strong>不是更聪明的搜索引擎，不是机器人，不是人脑——理解它的本质，才能用好它、也知道何时不该信任它</div></div>
+    </div>
+    <div class="quote-block" style="margin-top:20px;">
+      LLMs are a very different type of entity than us. They are a new kind of intelligence, different from human intelligence in many ways, and understanding this difference is the key to using them effectively.
+      <div class="quote-src">— Andrej Karpathy，Deep Dive into LLMs like ChatGPT，2025年2月</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggleChapter(header) {
+  const card = header.closest('.chapter-card');
+  card.classList.toggle('open');
+}
+window.addEventListener('scroll', () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progress').style.width = (window.scrollY / total * 100) + '%';
+});
+const sections = document.querySelectorAll('.section');
+const navLinks = document.querySelectorAll('.nav-link');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.nav-link[href="#${e.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.2 });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
